@@ -23,11 +23,9 @@ import org.slf4j.LoggerFactory;
 
 import com.google.gson.*;
 
-import com.clevekim.booksearch.dao.UserDao;
 import com.clevekim.booksearch.dao.BookDao;
 import com.clevekim.booksearch.dao.SearchHistoryDao;
 
-import com.clevekim.booksearch.model.entity.User;
 import com.clevekim.booksearch.model.entity.Book;
 import com.clevekim.booksearch.model.entity.Document;
 import com.clevekim.booksearch.model.entity.Meta;
@@ -44,34 +42,13 @@ public class BookSearchRestController {
 	private static final String API_KEY = "KakaoAK e0f21ef8a75dde9089cc8d1feac3bb55";
 	
 	@Autowired
-	private UserDao userDao;
-	@Autowired
 	private BookDao bookDao;
 	@Autowired
 	private SearchHistoryDao searchHistoryDao;
 
-	@RequestMapping("/user/create")
-	public User add(User user) {
-		User userData = userDao.save(user);
-
-		return userData;
-	}
-
-	@RequestMapping("/user/list")
-	public List<User> list(Model model) {
-		List<User> users = userDao.findAll();
-
-		return users;
-	}
-
-	@RequestMapping("/")
-	public String index() {
-		return "BookSearch!";
-	}
-	
-	@RequestMapping("/book/search")
-	public List<Book> insertBook(@RequestParam("query") String query 
-			, @RequestParam("sort") String sort,
+	@RequestMapping("/search")
+	public List<Book> insertBook(@RequestParam("query") String query, 
+			@RequestParam("sort") String sort,
 			@RequestParam("page") int page,
 			@RequestParam("size") int size,
 			@RequestParam("target") String target,
@@ -195,14 +172,14 @@ public class BookSearchRestController {
 		return book;
 	}
 	
-	@RequestMapping("/book/search/list")
+	@RequestMapping("/search/list")
 	public List<Book> searchedList(Model model) {
 		List<Book> books = bookDao.findAll();
 		
 		return books;
 	}
 	
-	@RequestMapping("/book/search/delete")
+	@RequestMapping("/search/delete")
 	public List<Book> deleteSearchList(@RequestParam("isbn") String isbn) {
 		Book book = bookDao.findOne(isbn);
 
@@ -212,19 +189,12 @@ public class BookSearchRestController {
 		return books;
 	}
 	
-	@RequestMapping("/book/search/delete/all")
+	@RequestMapping("/search/delete/all")
 	public List<Book> deleteAllSearchList() {
 		bookDao.deleteAll();
 		
 		List<Book> books = bookDao.findAll();
 		return books;
-	}
-	
-	@RequestMapping("/history/list")
-	public List<SearchHistory> addSearchHistory() {
-		List<SearchHistory> result = searchHistoryDao.findAll();
-		
-		return result;
 	}
 }
 
