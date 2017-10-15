@@ -16,7 +16,7 @@ public class BooksearchApplication {
 	@Bean
 	public ServletRegistrationBean h2servletRegistration() {
 	    ServletRegistrationBean registration = new ServletRegistrationBean(new WebServlet());
-	    registration.addUrlMappings("/console/booksearch");
+	    registration.addUrlMappings("/console/*");
 	    return registration;
 	}
 }
