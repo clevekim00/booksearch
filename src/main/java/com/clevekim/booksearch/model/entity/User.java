@@ -3,6 +3,7 @@ package com.clevekim.booksearch.model.entity;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.Column;
 
 @Entity
 public class User {
@@ -12,6 +13,9 @@ public class User {
 	int id;
 	
 	String name;
+	
+	@Column(length=255)
+	String barCode;
 	
 	public int getId() {
 		return id;
@@ -27,5 +31,13 @@ public class User {
 
 	public void setName(String name) {
 		this.name = name;
+	}
+	
+	public void setBarCode(String barcode) {
+		this.barCode = barcode;
+	}
+	
+	public String getBarCode() {
+		return barCode;
 	}
 }

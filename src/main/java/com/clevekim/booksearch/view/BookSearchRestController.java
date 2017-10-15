@@ -15,17 +15,15 @@ public class BookSearchRestController {
 	@Autowired
 	private UserDao userDao;
 
-	@RequestMapping("/create")
+	@RequestMapping("/user/create")
 	public User add(User user) {
-
 		User userData = userDao.save(user);
 
 		return userData;
 	}
 
-	@RequestMapping("/list")
+	@RequestMapping("/user/list")
 	public List<User> list(Model model) {
-
 		List<User> users = userDao.findAll();
 
 		return users;
