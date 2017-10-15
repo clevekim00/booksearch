@@ -30,6 +30,7 @@ import com.clevekim.booksearch.model.entity.Book;
 import com.clevekim.booksearch.model.entity.Document;
 import com.clevekim.booksearch.model.entity.Meta;
 import com.clevekim.booksearch.model.entity.SearchHistory;
+import com.clevekim.booksearch.model.entity.BookSearchResponse;
 
 @RestController
 public class BookSearchRestController {
@@ -70,6 +71,7 @@ public class BookSearchRestController {
 		List<Book> result = null;
 		
 		CloseableHttpClient httpClient = null;
+		BufferedReader reader = null;
 		try {
 			result = new ArrayList<Book>();
 			
@@ -87,7 +89,7 @@ public class BookSearchRestController {
 
 			logger.debug("GET Response Status:: {}", httpResponse.getStatusLine().getStatusCode());
 
-			BufferedReader reader = new BufferedReader(new InputStreamReader(
+			reader = new BufferedReader(new InputStreamReader(
 					httpResponse.getEntity().getContent()));
 
 			String inputLine;
@@ -96,7 +98,6 @@ public class BookSearchRestController {
 			while ((inputLine = reader.readLine()) != null) {
 				response.append(inputLine);
 			}
-			reader.close();
 			
 			// print result
 			logger.debug("Response: {}", response.toString());
@@ -107,10 +108,14 @@ public class BookSearchRestController {
 			logger.error("HttpGet Fail", e);
 		} finally {
 			try {
-				httpClient.close();
+				if (reader != null)
+					reader.close();
+				if (httpClient != null)
+					httpClient.close();
 			} catch(Exception io) {
 				
 			}
+			reader = null;
 			httpClient = null;
 		}
 		
@@ -136,7 +141,7 @@ public class BookSearchRestController {
 	
 	private List<Document> parsing(String list) {
 		Gson gson = new Gson();
-		Response res = gson.fromJson(list, Response.class);
+		BookSearchResponse res = gson.fromJson(list, BookSearchResponse.class);
 		
 		logger.debug("Meta.getPagable_count(): {}", res.getMeta().getPagable_count());
 		logger.debug("List<Document> size: {}", res.getDocuments().size());
@@ -195,22 +200,5 @@ public class BookSearchRestController {
 		
 		List<Book> books = bookDao.findAll();
 		return books;
-	}
-}
-
-class Response {
-	private List<Document> documents;
-	private Meta meta;
-	public List<Document> getDocuments() {
-		return documents;
-	}
-	public void setBooks(List<Document> documents) {
-		this.documents = documents;
-	}
-	public Meta getMeta() {
-		return meta;
-	}
-	public void setMeta(Meta meta) {
-		this.meta = meta;
 	}
 }
