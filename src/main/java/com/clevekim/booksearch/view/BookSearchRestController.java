@@ -1,9 +1,14 @@
 package com.clevekim.booksearch.view;
 
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Scanner;
 import java.net.URI;
 
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -13,6 +18,7 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.client.utils.URIBuilder;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -22,15 +28,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.gson.*;
-
+import com.google.gson.reflect.TypeToken;
 import com.clevekim.booksearch.dao.BookDao;
 import com.clevekim.booksearch.dao.SearchHistoryDao;
+import com.clevekim.booksearch.dao.CategoryDao;
 
 import com.clevekim.booksearch.model.entity.Book;
 import com.clevekim.booksearch.model.entity.Document;
-import com.clevekim.booksearch.model.entity.Meta;
 import com.clevekim.booksearch.model.entity.SearchHistory;
 import com.clevekim.booksearch.model.entity.BookSearchResponse;
+import com.clevekim.booksearch.model.entity.Category;
 
 @RestController
 public class BookSearchRestController {
@@ -41,11 +48,14 @@ public class BookSearchRestController {
 	private static final String USER_AGENT = "Mozilla/5.0";
 	private static final String GET_URL = "https://dapi.kakao.com/v2/search/book";
 	private static final String API_KEY = "KakaoAK e0f21ef8a75dde9089cc8d1feac3bb55";
+	private static final String CATEGORY_DATA_FILE = "data/category.txt";
 	
 	@Autowired
 	private BookDao bookDao;
 	@Autowired
 	private SearchHistoryDao searchHistoryDao;
+	@Autowired
+	private CategoryDao categoryDao;
 
 	@RequestMapping("/search")
 	public List<Book> insertBook(@RequestParam("query") String query, 
@@ -200,5 +210,61 @@ public class BookSearchRestController {
 		
 		List<Book> books = bookDao.findAll();
 		return books;
+	}
+	
+	@RequestMapping("/search/category")
+	public List<Category> categoryList() {
+		List<Category> categories = categoryDao.findAll();
+		
+		if (categories == null || categories.size() == 0) {
+			categories = insertCategoryData();
+			for (int i = 0; i < categories.size(); i++) {
+				categoryDao.saveAndFlush(categories.get(i));
+			}
+		}
+		
+		if (categories == null || categories.size() == 0)
+			return categories;
+		
+		Collections.sort(categories, new CategoryAsc());
+		
+		return categories;
+	}
+	
+	private List<Category> insertCategoryData() {
+		
+		StringBuilder result = new StringBuilder("");
+
+		//Get file from resources folder
+		ClassLoader classLoader = getClass().getClassLoader();
+		File file = new File(classLoader.getResource(CATEGORY_DATA_FILE).getFile());
+
+		try (Scanner scanner = new Scanner(file)) {
+
+			while (scanner.hasNextLine()) {
+				String line = scanner.nextLine();
+				result.append(line).append("\n");
+			}
+
+			scanner.close();
+
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		logger.debug("Read {}", result);
+
+		Gson gson = new Gson();
+		TypeToken typeToken = new TypeToken<List<Category>>() {};
+		List<Category> categoryData = gson.fromJson(result.toString(), typeToken.getType());
+		
+		return categoryData;
+	}
+	
+	static class CategoryAsc implements Comparator<Category> {
+		@Override
+		public int compare(Category arg0, Category arg1) {
+			return arg0.getCategory() < arg1.getCategory() ? -1 : arg0.getCategory() > arg1.getCategory() ? 1:0;
+		}
 	}
 }
