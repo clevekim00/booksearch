@@ -80,6 +80,26 @@ Released under the MIT license: http://jsbin.mit-license.org
       searchBook();
     }
 
+    function drawList(datas) {
+
+        var str = '';
+        for (var data in datas) {
+          str += '<tr>';
+          str += '<td>' + datas[data].title + '</td>';
+          str += '<td><a href="' + datas[data].url + '" target="_blank"><image src="' + datas[data].thumbnail + '"/></a></td>';
+          str += '<td>' + datas[data].authors + '</td>';
+          str += '<td>' + datas[data].publisher + '</td>';
+          // str += '<td>' + datas[data].isbn + '</td>';
+          str += '<td>' + datas[data].price + '</td>';
+          str += '<td>' + datas[data].sale_price + '</td>';
+          str += '<td>' + datas[data].contents + '</td>';
+          str += '<td><input type="checkbox" id="bookMarkerInfo" value="' + datas[data].isbn + '">북마크</td>';
+          str += '</tr>';
+        }
+
+        $('#result').html(str);
+    }
+
     function searchBook() {
       var queryUrl = '/search' + 
                         '?query=' + $('#query').val() + 
@@ -94,21 +114,8 @@ Released under the MIT license: http://jsbin.mit-license.org
               dataType:'json',
               success:function(res){
                 console.log(datas);
-                var str = '';
                 var datas = res.documents;
-                for (var data in datas) {
-                  str += '<tr>';
-                  str += '<td>' + datas[data].title + '</td>';
-                  str += '<td><a href="' + datas[data].url + '" target="_blank"><image src="' + datas[data].thumbnail + '"/></a></td>';
-                  str += '<td>' + datas[data].authors + '</td>';
-                  str += '<td>' + datas[data].publisher + '</td>';
-                  //str += '<td>' + datas[data].isbn + '</td>';
-                  str += '<td>' + datas[data].price + '</td>';
-                  str += '<td>' + datas[data].sale_price + '</td>';
-                  str += '<td>' + datas[data].contents + '</td>';
-                  str += '</tr>';
-                }
-                $('#result').html(str);
+                drawList(datas);
                 var lastPageIndex = parseInt(res.meta.total_count / parseInt($('#size').val()));
                 if (lastPageIndex > 50)
                   lastPageIndex = 50;
@@ -185,20 +192,7 @@ Released under the MIT license: http://jsbin.mit-license.org
               url:queryUrl,
               dataType:'json',
               success:function(datas){
-                var str = '';
-                for (var data in datas) {
-                  str += '<tr>';
-                  str += '<td>' + datas[data].title + '</td>';
-                  str += '<td><a href="' + datas[data].url + '" target="_blank"><image src="' + datas[data].thumbnail + '"/></a></td>';
-                  str += '<td>' + datas[data].authors + '</td>';
-                  str += '<td>' + datas[data].publisher + '</td>';
-                  // str += '<td>' + datas[data].isbn + '</td>';
-                  str += '<td>' + datas[data].price + '</td>';
-                  str += '<td>' + datas[data].sale_price + '</td>';
-                  str += '<td>' + datas[data].contents + '</td>';
-                  str += '</tr>';
-                }
-                $('#result').html(str);
+                drawList(datas);
 
                 var pageIndex = ' <<  <  >  >> ';
                 // console.log(pageIndex);
@@ -221,6 +215,78 @@ Released under the MIT license: http://jsbin.mit-license.org
                 // console.log(pageIndex);
 
                 $('#pageIndexTag').html(pageIndex);
+              }
+          })
+      })
+      //bookMarkerSearch
+      $('#bookMarkerSearch').click(function(){
+        var queryUrl = '/bookmarker/list';
+          console.log(queryUrl);
+          $.ajax({
+              url:queryUrl,
+              dataType:'json',
+              success:function(datas){
+                drawList(datas);
+
+                var pageIndex = ' <<  <  >  >> ';
+
+                $('#pageIndexTag').html(pageIndex);
+              }
+          })
+      })
+      //bookMarkerAdd
+      $('#bookMarkerAdd').click(function(){
+        var isbns = '';
+        $('#bookMarkerInfo:checked').each(function() { 
+            isbns += ($(this).val()) + ',';
+        });
+        console.log("isbns:" + isbns);
+        if (isbns == '')
+          return;
+        var queryUrl = '/bookmarker?bookMarkerInfo=' + isbns;
+          console.log(queryUrl);
+          $.ajax({
+              url:queryUrl,
+              dataType:'json',
+              success:function(datas){
+                alert("success add bookmarker")
+              }
+          })
+      })
+      //bookMarkerDelete
+      $('#bookMarkerDelete').click(function(){
+        var isbns = '';
+        $('#bookMarkerInfo:checked').each(function() { 
+            isbns += ($(this).val()) + ',';
+        });
+        console.log("isbns:" + isbns);
+        if (isbns == '')
+          return;
+        var queryUrl = '/bookmarker/delete?bookMarkerInfo=' + isbns;
+          console.log(queryUrl);
+          $.ajax({
+              url:queryUrl,
+              dataType:'json',
+              success:function(datas){
+                drawList(datas);
+
+                var pageIndex = ' <<  <  >  >> ';
+
+                $('#pageIndexTag').html(pageIndex);
+                alert("success delete bookmarker")
+              }
+          })
+      })
+      //bookMarkerDeleteAll
+      $('#bookMarkerDeleteAll').click(function(){
+        var queryUrl = '/bookmarker/delete/all';
+          console.log(queryUrl);
+          $.ajax({
+              url:queryUrl,
+              dataType:'json',
+              success:function(datas){
+                $('#result').html('');
+                alert("success delete all bookmarker")
               }
           })
       })
@@ -325,6 +391,18 @@ Released under the MIT license: http://jsbin.mit-license.org
         <td>
           <input type="button" id="deleteLastSearchResult" value="이전 검색 결과 삭제"/>
         </td>
+        <td>
+          <input type="button" id="bookMarkerSearch" value="북마크 조회"/>
+        </td>
+        <td>
+          <input type="button" id="bookMarkerAdd" value="북마크 추가"/>
+        </td>
+        <td>
+          <input type="button" id="bookMarkerDelete" value="선택된 북마크 삭제"/>
+        </td>
+        <td>
+          <input type="button" id="bookMarkerDeleteAll" value="북마크 전체 삭제"/>
+        </td>
       </tr>
     </table>
     <p/>
@@ -341,6 +419,7 @@ Released under the MIT license: http://jsbin.mit-license.org
           <th scope="cols">price</th>
           <th scope="cols">sale</th>
           <th scope="cols">contents</th>
+          <th scope="cols" id="bookMarkerRow">북마크</th>
         </tr>
       </thead>
       <tbody id="result">

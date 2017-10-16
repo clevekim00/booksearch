@@ -29,10 +29,12 @@ import org.slf4j.LoggerFactory;
 import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
 import com.clevekim.booksearch.dao.BookDao;
+import com.clevekim.booksearch.dao.BookMarkerDao;
 import com.clevekim.booksearch.dao.SearchHistoryDao;
 import com.clevekim.booksearch.dao.CategoryDao;
 
 import com.clevekim.booksearch.model.entity.Book;
+import com.clevekim.booksearch.model.entity.BookMarker;
 import com.clevekim.booksearch.model.entity.Document;
 import com.clevekim.booksearch.model.entity.SearchHistory;
 import com.clevekim.booksearch.model.entity.BookSearchResponse;
@@ -260,7 +262,7 @@ public class BookSearchRestController {
 		//Get file from resources folder
 		ClassLoader classLoader = getClass().getClassLoader();
 		File file = new File(classLoader.getResource(CATEGORY_DATA_FILE).getFile());
-
+		
 		try {
 			Scanner scanner = new Scanner(file);
 			while (scanner.hasNextLine()) {
@@ -286,5 +288,67 @@ public class BookSearchRestController {
 		public int compare(Category arg0, Category arg1) {
 			return arg0.getCategory() < arg1.getCategory() ? -1 : arg0.getCategory() > arg1.getCategory() ? 1:0;
 		}
+	}
+	
+	@Autowired
+	private BookMarkerDao bookMarkerDao;
+	
+	@RequestMapping("/bookmarker")
+	public List<BookMarker> addBookMarker(@RequestParam("bookMarkerInfo") String bookMarkerInfo) {
+		if (bookMarkerInfo == null || bookMarkerInfo.length() == 0)
+			return null;
+		
+		bookMarkerInfo = bookMarkerInfo.substring(0, bookMarkerInfo.length() - 1);
+		
+		String []isbns = bookMarkerInfo.split(",");
+		
+		List<BookMarker> result = new ArrayList<BookMarker>();
+		for (int i = 0; i < isbns.length; i++) {
+			BookMarker bookMarker = new BookMarker();
+			bookMarker.setIsbn(isbns[i]);
+			
+			result.add(bookMarkerDao.saveAndFlush(bookMarker));
+		}
+		
+		return result;
+	}
+	
+	@RequestMapping("/bookmarker/list")
+	public List<Book> bookMarkerList() {
+		return getBookMarkedList();
+	}
+	
+	private List<Book> getBookMarkedList() {
+		List<BookMarker> bookMarkers = bookMarkerDao.findAll();
+		
+		List<String> isbns = new ArrayList<String>();
+		for (int i = 0; i < bookMarkers.size(); i++) {
+			isbns.add(bookMarkers.get(i).getIsbn());
+		}
+		
+		return bookDao.findAll(isbns.subList(0, isbns.size()));
+	}
+	
+	@RequestMapping("/bookmarker/delete")
+	public List<Book> deleteBookMarker(@RequestParam("bookMarkerInfo") String bookMarkerInfo) {
+		if (bookMarkerInfo == null || bookMarkerInfo.length() == 0) {
+			return getBookMarkedList();
+		}
+		bookMarkerInfo = bookMarkerInfo.substring(0, bookMarkerInfo.length() - 1);
+		
+		String []isbns = bookMarkerInfo.split(",");
+		for (int i = 0; i < isbns.length; i++) {
+			BookMarker bookMarker = new BookMarker();
+			bookMarker.setIsbn(isbns[i]);
+			
+			bookMarkerDao.delete(bookMarker);
+		}
+		
+		return getBookMarkedList();
+	}
+	
+	@RequestMapping("/bookmarker/delete/all")
+	public void deleteAllBookMarker() {
+		bookMarkerDao.deleteAll();
 	}
 }

@@ -1,9 +1,9 @@
 package com.clevekim.booksearch.model.entity;
 
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
+//import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.Column;
+//import javax.persistence.Column;
 
 @Entity
 public class Category {
