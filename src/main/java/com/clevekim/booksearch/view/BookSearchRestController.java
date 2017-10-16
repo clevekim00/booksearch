@@ -103,7 +103,7 @@ public class BookSearchRestController {
 			logger.debug("Response: {}", response.toString());
 			
 			List<Document> documents = parsing(response.toString());
-			saveBookData(documents);
+			result = saveBookData(documents);
 		} catch(Exception e) {
 			logger.error("HttpGet Fail", e);
 		} finally {
