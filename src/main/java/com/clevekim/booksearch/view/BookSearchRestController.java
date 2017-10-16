@@ -57,13 +57,19 @@ public class BookSearchRestController {
 	private CategoryDao categoryDao;
 
 	@RequestMapping("/search")
-	public List<Book> insertBook(@RequestParam("query") String query, 
+	public BookSearchResponse insertBook(@RequestParam("query") String query, 
 			@RequestParam("sort") String sort,
 			@RequestParam("page") int page,
 			@RequestParam("size") int size,
 			@RequestParam("target") String target,
 			@RequestParam("category") String category
 			) {
+
+		logger.debug("size {}", size);
+		logger.debug("sort {}", sort);
+		logger.debug("target {}", target);
+		logger.debug("category {}", category);
+		logger.debug("page {}", page);
 		
 		SearchHistory history = new SearchHistory();
 		if (category == null || category.length() == 0)
@@ -81,6 +87,9 @@ public class BookSearchRestController {
 		
 		CloseableHttpClient httpClient = null;
 		BufferedReader reader = null;
+		StringBuffer response = new StringBuffer();
+		List<Document> documents = null;
+		BookSearchResponse res = null;
 		try {
 			result = new ArrayList<Book>();
 			
@@ -91,7 +100,13 @@ public class BookSearchRestController {
 			httpGet.addHeader("Authorization", API_KEY);
 			
 			URI uri = new URIBuilder(httpGet.getURI())
-					.addParameter("query",query).build();
+					.addParameter("query",query)
+					.addParameter("size", String.valueOf(size))
+					.addParameter("page", String.valueOf(page))
+					.addParameter("sort",sort)
+					.addParameter("category",category)
+					.addParameter("target",target)
+					.build();
 			httpGet.setURI(uri);
 			
 			CloseableHttpResponse httpResponse = httpClient.execute(httpGet);
@@ -102,7 +117,6 @@ public class BookSearchRestController {
 					httpResponse.getEntity().getContent()));
 
 			String inputLine;
-			StringBuffer response = new StringBuffer();
 
 			while ((inputLine = reader.readLine()) != null) {
 				response.append(inputLine);
@@ -111,7 +125,8 @@ public class BookSearchRestController {
 			// print result
 			logger.debug("Response: {}", response.toString());
 			
-			List<Document> documents = parsing(response.toString());
+			res = parsing(response.toString());
+			documents = res.getDocuments();
 			result = saveBookData(documents);
 		} catch(Exception e) {
 			logger.error("HttpGet Fail", e);
@@ -128,7 +143,7 @@ public class BookSearchRestController {
 			httpClient = null;
 		}
 		
-		return result;
+		return res;
 	}
 	
 	private List<Book> saveBookData(List<Document> documents) {
@@ -148,13 +163,13 @@ public class BookSearchRestController {
 		searchHistoryDao.saveAndFlush(history);
 	}
 	
-	private List<Document> parsing(String list) {
+	private BookSearchResponse parsing(String list) {
 		Gson gson = new Gson();
 		BookSearchResponse res = gson.fromJson(list, BookSearchResponse.class);
 		
 		logger.debug("Meta.getPagable_count(): {}", res.getMeta().getPagable_count());
 		logger.debug("List<Document> size: {}", res.getDocuments().size());
-		return res.getDocuments();
+		return res;
 	}
 	
 	private Book convertToBook(Document document) {

@@ -48,6 +48,12 @@ Released under the MIT license: http://jsbin.mit-license.org
   <script src="http://code.jquery.com/jquery-1.11.2.min.js"></script>
   <script src="http://code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
   <script src="js/jquery.cookie.js"></script>
+  <script type="text/javascript">
+    function goPage(var pageIndex) {
+      $('#page').val(pageIndex);
+      $('#search')
+    }
+  </script>
   <script>
     $(function(){
       $('#search').click(function(){
@@ -55,16 +61,17 @@ Released under the MIT license: http://jsbin.mit-license.org
                         '?query=' + $('#query').val() + 
                         '&sort=' + $('#sort option:selected').val() + 
                         '&page=' + $('#page').val() + 
-                        '&size=' + $('#size').val()  + 
+                        '&size=' + $('#size option:selected').val()  + 
                         '&target=' + $('#target option:selected').val() + 
                         '&category=' + $('#category option:selected').val();
           console.log(queryUrl);
           $.ajax({
               url:queryUrl,
               dataType:'json',
-              success:function(datas){
+              success:function(res){
                 console.log(datas);
                 var str = '';
+                var datas = res.documents;
                 for (var data in datas) {
                   str += '<tr>';
                   str += '<td>' + datas[data].title + '</td>';
@@ -78,6 +85,22 @@ Released under the MIT license: http://jsbin.mit-license.org
                   str += '</tr>';
                 }
                 $('#result').html(str);
+                var lastPageIndex = res.meta.total_count / parseInt($('#size').val());
+                if (lastPageIndex * parseInt($('#size').val()) < res.meta.total_count)
+                  lastPageIndex++;
+
+                var pageIndex = '<a href="javscript:goFirst();">처음</a>';
+                for (var i = 1; i <= 10 && i < lastPageIndex; i++) {
+                  if  (i == parseInt($('#page').val())) {
+                    pageIndex += '|' + i;
+                  } else {
+                    pageIndex += '|<a href="javascript:goPage(' + i + ');">' + i + '<a>';
+                  }
+                }
+                pageIndex += '|<a href="javascript:goLast();">끝</a>';
+                console.log(pageIndex);
+
+                $('#pageIndexTag').html(pageIndex);
               }
           })
       })
@@ -198,7 +221,15 @@ Released under the MIT license: http://jsbin.mit-license.org
         <td>
           <input type="text" id="query" size="50"/>
           <input type="hidden" id="page" value="1"/>
-          <input type="hidden" id="size" value="10"/>
+        </td>
+        <td>
+          <select id="size">
+            <option value="10">10</option>
+            <option value="20">20</option>
+            <option value="30">30</option>
+            <option value="40">40</option>
+            <option value="50">50</option>
+          </select>
         </td>
         <td>
           <input type="button" id="search" value="검색" />
@@ -246,5 +277,8 @@ Released under the MIT license: http://jsbin.mit-license.org
       <tbody id="result">
       </tbody>
     </table>
+    <p/>
+    <p align="center" id="pageIndexTag">
+    </p>
 </body>
 </html>
