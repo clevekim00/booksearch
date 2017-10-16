@@ -1,5 +1,11 @@
 # booksearch
 
+# Env
+## Framework
+* spring boot 1.5.7.RELEASE
+## DB
+* h2
+
 # Restful API
 ## Search
 * /search : 검색
