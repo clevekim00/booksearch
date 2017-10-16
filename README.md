@@ -3,6 +3,8 @@
 # Env
 ## Framework
 * spring boot 1.5.7.RELEASE
+* jQuery 1.11.2
+
 ## DB
 * h2
 
@@ -19,3 +21,5 @@
 * /history/delete : 검색 조건 히스토리 한건 삭제
 * /history/delete/all : 검색 조건 히스토리 전체 삭제
 
+## 사용자 관리
+* /user/create : 새로운 사용자 등록

@@ -18,7 +18,6 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.client.utils.URIBuilder;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -239,15 +238,13 @@ public class BookSearchRestController {
 		ClassLoader classLoader = getClass().getClassLoader();
 		File file = new File(classLoader.getResource(CATEGORY_DATA_FILE).getFile());
 
-		try (Scanner scanner = new Scanner(file)) {
-
+		try {
+			Scanner scanner = new Scanner(file);
 			while (scanner.hasNextLine()) {
 				String line = scanner.nextLine();
 				result.append(line).append("\n");
 			}
-
 			scanner.close();
-
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -255,7 +252,7 @@ public class BookSearchRestController {
 		logger.debug("Read {}", result);
 
 		Gson gson = new Gson();
-		TypeToken typeToken = new TypeToken<List<Category>>() {};
+		TypeToken<List<Category>> typeToken = new TypeToken<List<Category>>() {};
 		List<Category> categoryData = gson.fromJson(result.toString(), typeToken.getType());
 		
 		return categoryData;

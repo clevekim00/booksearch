@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<!--
+Created using JS Bin
+http://jsbin.com
+
+Copyright (c) 2017 by anonymous (http://jsbin.com/mijamisimo/1/edit)
+
+Released under the MIT license: http://jsbin.mit-license.org
+-->
+<meta name="robots" content="noindex">
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <title>Book Search</title>
+    <style type="text/css">
+      div {
+          display: block;
+      }
+      table.type09 {
+          border-collapse: collapse;
+          text-align: left;
+          line-height: 1.5;
+
+      }
+      table.type09 thead th {
+          padding: 10px;
+          font-weight: bold;
+          vertical-align: top;
+          color: #369;
+          border-bottom: 3px solid #036;
+      }
+      table.type09 tbody th {
+          width: 150px;
+          padding: 10px;
+          font-weight: bold;
+          vertical-align: top;
+          border-bottom: 1px solid #ccc;
+          background: #f3f6f7;
+      }
+      table.type09 td {
+          width: 350px;
+          padding: 10px;
+          vertical-align: top;
+          border-bottom: 1px solid #ccc;
+      }
+  </style>
+  <script src="http://code.jquery.com/jquery-1.11.2.min.js"></script>
+  <script src="http://code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
+  <script src="js/jquery.cookie.js"></script>
+  <script>
+    $(function(){
+      $('#search').click(function(){
+        var queryUrl = '/search' + 
+                        '?query=' + $('#query').val() + 
+                        '&sort=' + $('#sort option:selected').val() + 
+                        '&page=' + $('#page').val() + 
+                        '&size=' + $('#size').val()  + 
+                        '&target=' + $('#target option:selected').val() + 
+                        '&category=' + $('#category option:selected').val();
+          console.log(queryUrl);
+          $.ajax({
+              url:queryUrl,
+              dataType:'json',
+              success:function(datas){
+                console.log(datas);
+                var str = '';
+                for (var data in datas) {
+                  str += '<tr>';
+                  str += '<td>' + datas[data].title + '</td>';
+                  str += '<td><a href="' + datas[data].url + '" target="_blank"><image src="' + datas[data].thumbnail + '"/></a></td>';
+                  str += '<td>' + datas[data].authors + '</td>';
+                  str += '<td>' + datas[data].publisher + '</td>';
+                  str += '<td>' + datas[data].isbn + '</td>';
+                  str += '<td>' + datas[data].price + '</td>';
+                  str += '<td>' + datas[data].sale_price + '</td>';
+                  str += '<td>' + datas[data].contents + '</td>';
+                  str += '</tr>';
+                }
+                $('#result').html(str);
+              }
+          })
+      })
+
+      //검색 히스토리 삭제
+      $('#deleteLastSearch').click(function(){
+        var queryUrl = '/history/delete/all';
+          console.log(queryUrl);
+          $.ajax({
+              url:queryUrl,
+              dataType:'json',
+              success:function(datas) {
+                $('#history').html('');
+              }
+          })
+      })
+
+      //이전 검색 결과 조회
+      $('#lastSearch').click(function(){
+        var queryUrl = '/search/list';
+          console.log(queryUrl);
+          $.ajax({
+              url:queryUrl,
+              dataType:'json',
+              success:function(datas){
+                var str = '';
+                for (var data in datas) {
+                  str += '<tr>';
+                  str += '<td>' + datas[data].title + '</td>';
+                  str += '<td><a href="' + datas[data].url + '" target="_blank"><image src="' + datas[data].thumbnail + '"/></a></td>';
+                  str += '<td>' + datas[data].authors + '</td>';
+                  str += '<td>' + datas[data].publisher + '</td>';
+                  str += '<td>' + datas[data].isbn + '</td>';
+                  str += '<td>' + datas[data].price + '</td>';
+                  str += '<td>' + datas[data].sale_price + '</td>';
+                  str += '<td>' + datas[data].contents + '</td>';
+                  str += '</tr>';
+                }
+                $('#result').html(str);
+              }
+          })
+      })
+
+      $('#deleteLastSearchResult').click(function(){
+        var queryUrl = '/search/delete/all';
+          console.log(queryUrl);
+          $.ajax({
+              url:queryUrl,
+              dataType:'json',
+              success:function(datas){
+                var str = '';
+                $('#result').html(str);
+              }
+          })
+      })
+    })
+
+    $( document ).ready(function() {
+        console.log( "ready!" );
+
+        $.ajax({
+          url:'/search/category',
+          dataType:'json',
+          success:function(datas){
+              var str = '';
+              for(var data in datas) {
+                  str += '<option value=' + datas[data].category + '>' + datas[data].firstSection + ' ' + datas[data].secondSection + '</option>';
+              }
+              $('#category').html('<select name="category">'+str+'</select>');
+          }
+        })
+
+        $.ajax({
+          url:'/history/list',
+          dataType:'json',
+          success:function(datas){
+            console.log(datas);
+            var str = '';
+            for (var data in datas) {
+              str += datas[data].query + ', ';
+            }
+            $('#history').html(str);
+          }
+        })
+
+        $.ajax({
+          url:'/search/list',
+          dataType:'json',
+          success:function(datas){
+            console.log(datas);
+          }
+        })
+    });
+    
+  </script>
+</head>
+<body>
+    <table class="type09">
+      <tr>
+        <td id="category"></td>
+        <td>
+          <select id="target">
+            <option value="all">전체</option>
+            <option value="title">제목에서 검색</option>
+            <option value="isbn">ISBN에서 검색</option>
+            <option value="keyword">주제어에서 검색</option>
+            <option value="contents">목차에서 검색</option>
+            <option value="overview">책소개에서 검색</option>
+            <option value="publisher">출판사에서 검색</option>
+         </select>
+        </td>
+        <td>
+          <select id="sort">
+            <option value="accuray">정확도순</option>
+            <option value="recency">최신순</option>
+          </select>
+        </td>
+        <td>
+          <input type="text" id="query" size="50"/>
+          <input type="hidden" id="page" value="1"/>
+          <input type="hidden" id="size" value="10"/>
+        </td>
+        <td>
+          <input type="button" id="search" value="검색" />
+        </td>
+      </tr>
+    </table>
+    <p/>
+    <table class="type09">
+      <tr>
+        <td>최근 검색어</td>
+        <td id="history" ><td>
+        <td>
+          <input type="button" id="deleteLastSearch" value="삭제"/>
+        </td>
+      </tr>
+    </table>
+    <p/>
+    <p/>
+    <table class="type09">
+      <tr>
+        <td>
+          <input type="button" id="lastSearch" value="이전 검색 결과 조회"/>
+        </td>
+        <td>
+          <input type="button" id="deleteLastSearchResult" value="이전 검색 결과 삭제"/>
+        </td>
+      </tr>
+    </table>
+    <p/>
+    <p/>
+    <table class="type09">
+      <thead>
+        <tr><td>검색결과</td></tr>
+        <tr>
+          <th scope="cols">제목</th>
+          <th scope="cols">사진</th>
+          <th scope="cols">저자</th>
+          <th scope="cols">출판사</th>
+          <th scope="cols">isbn</th>
+          <th scope="cols">price</th>
+          <th scope="cols">sale</th>
+          <th scope="cols">contents</th>
+        </tr>
+      </thead>
+      <tbody id="result">
+      </tbody>
+    </table>
+</body>
+</html>
