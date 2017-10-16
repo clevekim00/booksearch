@@ -49,15 +49,39 @@ Released under the MIT license: http://jsbin.mit-license.org
   <script src="http://code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
   <script src="js/jquery.cookie.js"></script>
   <script type="text/javascript">
-    function goPage(var pageIndex) {
+    function goPage(pageIndex) {
       $('#page').val(pageIndex);
-      $('#search')
+      searchBook();
     }
-  </script>
-  <script>
-    $(function(){
-      $('#search').click(function(){
-        var queryUrl = '/search' + 
+
+    function goFirst() {
+      $('#page').val(1);
+      searchBook();
+    }
+    function goPrev() {
+      var index = parseInt($('#page').val());
+      if (index == 1)
+        return;
+
+      $('#page').val(index - 1);
+      searchBook();
+    }
+    function goNext() {
+      var index = parseInt($('#page').val());
+      if (index == 50)
+        return;
+
+      $('#page').val(index + 1);
+      searchBook();
+    }
+
+    function goLast() {
+      $('#page').val($('#lastPageIndex').val());
+      searchBook();
+    }
+
+    function searchBook() {
+      var queryUrl = '/search' + 
                         '?query=' + $('#query').val() + 
                         '&sort=' + $('#sort option:selected').val() + 
                         '&page=' + $('#page').val() + 
@@ -78,31 +102,66 @@ Released under the MIT license: http://jsbin.mit-license.org
                   str += '<td><a href="' + datas[data].url + '" target="_blank"><image src="' + datas[data].thumbnail + '"/></a></td>';
                   str += '<td>' + datas[data].authors + '</td>';
                   str += '<td>' + datas[data].publisher + '</td>';
-                  str += '<td>' + datas[data].isbn + '</td>';
+                  //str += '<td>' + datas[data].isbn + '</td>';
                   str += '<td>' + datas[data].price + '</td>';
                   str += '<td>' + datas[data].sale_price + '</td>';
                   str += '<td>' + datas[data].contents + '</td>';
                   str += '</tr>';
                 }
                 $('#result').html(str);
-                var lastPageIndex = res.meta.total_count / parseInt($('#size').val());
-                if (lastPageIndex * parseInt($('#size').val()) < res.meta.total_count)
-                  lastPageIndex++;
+                var lastPageIndex = parseInt(res.meta.total_count / parseInt($('#size').val()));
+                if (lastPageIndex > 50)
+                  lastPageIndex = 50;
 
-                var pageIndex = '<a href="javscript:goFirst();">처음</a>';
-                for (var i = 1; i <= 10 && i < lastPageIndex; i++) {
+                var start = 1;
+                var end = 10;
+                var p = parseInt($('#page').val());
+                if (p <= 10) {
+                  start = 1;
+                  end = 10;
+                }
+                else if (p > 10 && p <= 20) {
+                  start = 11;
+                  end = 20;
+                }
+                else if (p > 20 && p <= 30) {
+                  start = 21;
+                  end = 30;
+                }
+                else if (p > 30 && p <= 40) {
+                  start = 31;
+                  end = 40;
+                }
+                else if (p > 40 && p <= 50) {
+                  start = 41;
+                  end = lastPageIndex;
+                }
+
+                console.log('start:' + start + ', end:' + end + 'res.meta.total_count:' + res.meta.total_count);
+                
+                $('#lastPageIndex').val(lastPageIndex);
+
+                var pageIndex = '<a href="javscript:goFirst();"> << </a>';
+                pageIndex += '<a href="javascript:goPrev();"> < </a>';
+                for (var i = start; i <= end; i++) {
                   if  (i == parseInt($('#page').val())) {
-                    pageIndex += '|' + i;
+                    pageIndex += '| ' + i + ' ';
                   } else {
-                    pageIndex += '|<a href="javascript:goPage(' + i + ');">' + i + '<a>';
+                    pageIndex += '| <a href="javascript:goPage(' + i + ');">' + i + ' <a>';
                   }
                 }
-                pageIndex += '|<a href="javascript:goLast();">끝</a>';
+                pageIndex += '| <a href="javascript:goNext();"> > </a><a href="javascript:goLast();"> >> </a>';
                 console.log(pageIndex);
 
                 $('#pageIndexTag').html(pageIndex);
               }
           })
+    }
+  </script>
+  <script>
+    $(function(){
+      $('#search').click(function(){
+        searchBook();
       })
 
       //검색 히스토리 삭제
@@ -133,13 +192,18 @@ Released under the MIT license: http://jsbin.mit-license.org
                   str += '<td><a href="' + datas[data].url + '" target="_blank"><image src="' + datas[data].thumbnail + '"/></a></td>';
                   str += '<td>' + datas[data].authors + '</td>';
                   str += '<td>' + datas[data].publisher + '</td>';
-                  str += '<td>' + datas[data].isbn + '</td>';
+                  // str += '<td>' + datas[data].isbn + '</td>';
                   str += '<td>' + datas[data].price + '</td>';
                   str += '<td>' + datas[data].sale_price + '</td>';
                   str += '<td>' + datas[data].contents + '</td>';
                   str += '</tr>';
                 }
                 $('#result').html(str);
+
+                var pageIndex = ' <<  <  >  >> ';
+                // console.log(pageIndex);
+
+                $('#pageIndexTag').html(pageIndex);
               }
           })
       })
@@ -153,6 +217,10 @@ Released under the MIT license: http://jsbin.mit-license.org
               success:function(datas){
                 var str = '';
                 $('#result').html(str);
+                var pageIndex = '';
+                // console.log(pageIndex);
+
+                $('#pageIndexTag').html(pageIndex);
               }
           })
       })
@@ -221,6 +289,7 @@ Released under the MIT license: http://jsbin.mit-license.org
         <td>
           <input type="text" id="query" size="50"/>
           <input type="hidden" id="page" value="1"/>
+          <input type="hidden" id="lastPageIndex" value="1"/>
         </td>
         <td>
           <select id="size">
@@ -268,7 +337,7 @@ Released under the MIT license: http://jsbin.mit-license.org
           <th scope="cols">사진</th>
           <th scope="cols">저자</th>
           <th scope="cols">출판사</th>
-          <th scope="cols">isbn</th>
+          <!-- th scope="cols">isbn</th -->
           <th scope="cols">price</th>
           <th scope="cols">sale</th>
           <th scope="cols">contents</th>

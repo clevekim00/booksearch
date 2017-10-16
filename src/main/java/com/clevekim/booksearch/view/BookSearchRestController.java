@@ -48,6 +48,8 @@ public class BookSearchRestController {
 	private static final String GET_URL = "https://dapi.kakao.com/v2/search/book";
 	private static final String API_KEY = "KakaoAK e0f21ef8a75dde9089cc8d1feac3bb55";
 	private static final String CATEGORY_DATA_FILE = "data/category.txt";
+	private static final int MAX_PAGE = 50;
+	private static final int MAX_SIZE = 50;
 	
 	@Autowired
 	private BookDao bookDao;
@@ -70,6 +72,12 @@ public class BookSearchRestController {
 		logger.debug("target {}", target);
 		logger.debug("category {}", category);
 		logger.debug("page {}", page);
+		
+		if (page > MAX_PAGE)
+			page = MAX_PAGE;
+		
+		if (size > MAX_SIZE)
+			size = MAX_SIZE;
 		
 		SearchHistory history = new SearchHistory();
 		if (category == null || category.length() == 0)
