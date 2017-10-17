@@ -12,10 +12,14 @@ import java.util.List;
 import java.util.Scanner;
 import java.net.URI;
 
+import org.apache.http.NameValuePair;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.client.utils.URIBuilder;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -86,53 +90,48 @@ public class BookSearchRestController {
 		if (size > MAX_SIZE)
 			size = MAX_SIZE;
 		
-		SearchHistory history = new SearchHistory();
-		if (category == null || category.length() == 0)
-			history.setCategory(0);
-		else
-			history.setCategory(Integer.parseInt(category));
-		history.setPage(page);
-		history.setQuery(query);
-		history.setSize(size);
-		history.setSort(sort);
-		history.setTitle(target);
-		saveSearchHistory(history);
+		saveSearchHistory(query, size, category, page, sort, target);
 		
-		List<Book> result = null;
+		String apiResponse = callApi(query, size, category, page, sort, target);
 		
+		BookSearchResponse res = parsing(apiResponse);
+		if (res == null)
+			return null;
+		
+		saveBookData(res.getDocuments());
+		
+		return res;
+	}
+	
+	private String callApi(String query, int size, String category, int page, String sort, String target) {
 		CloseableHttpClient httpClient = null;
 		BufferedReader reader = null;
-		StringBuffer response = new StringBuffer();
-		List<Document> documents = null;
-		BookSearchResponse res = null;
+		StringBuffer response = null;
 		try {
-			result = new ArrayList<Book>();
-			
 			httpClient = HttpClients.createDefault();
 
-			HttpGet httpGet = new HttpGet(GET_URL);
-			httpGet.addHeader("User-Agent", USER_AGENT);
-			httpGet.addHeader("Authorization", API_KEY);
+			HttpPost httpPost = new HttpPost(GET_URL);
+			httpPost.addHeader("User-Agent", USER_AGENT);
+			httpPost.addHeader("Authorization", API_KEY);
 			
-			URI uri = new URIBuilder(httpGet.getURI())
-					.addParameter("query",query)
-					.addParameter("size", String.valueOf(size))
-					.addParameter("page", String.valueOf(page))
-					.addParameter("sort",sort)
-					.addParameter("category",category)
-					.addParameter("target",target)
-					.build();
-			httpGet.setURI(uri);
-			
-			CloseableHttpResponse httpResponse = httpClient.execute(httpGet);
+			 List<NameValuePair> params = new ArrayList<NameValuePair>(2);
+	         params.add(new BasicNameValuePair("query", query));
+	         params.add(new BasicNameValuePair("size", String.valueOf(size)));
+	         params.add(new BasicNameValuePair("page", String.valueOf(page)));
+	         params.add(new BasicNameValuePair("sort",  sort));
+	         params.add(new BasicNameValuePair("target",  target));
+	         params.add(new BasicNameValuePair("category",  category));
+	         httpPost.setEntity(new UrlEncodedFormEntity(params, "UTF-8"));
+	         
+			CloseableHttpResponse httpResponse = httpClient.execute(httpPost);
 
-			logger.debug("GET Response Status:: {}", httpResponse.getStatusLine().getStatusCode());
+			logger.debug("Response Status:: {}", httpResponse.getStatusLine().getStatusCode());
 
 			reader = new BufferedReader(new InputStreamReader(
 					httpResponse.getEntity().getContent()));
 
 			String inputLine;
-
+			response = new StringBuffer();
 			while ((inputLine = reader.readLine()) != null) {
 				response.append(inputLine);
 			}
@@ -140,11 +139,9 @@ public class BookSearchRestController {
 			// print result
 			logger.debug("Response: {}", response.toString());
 			
-			res = parsing(response.toString());
-			documents = res.getDocuments();
-			result = saveBookData(documents);
 		} catch(Exception e) {
 			logger.error("HttpGet Fail", e);
+			response = new StringBuffer();
 		} finally {
 			try {
 				if (reader != null)
@@ -158,23 +155,28 @@ public class BookSearchRestController {
 			httpClient = null;
 		}
 		
-		return res;
+		return response.toString();
 	}
 	
-	private List<Book> saveBookData(List<Document> documents) {
-		List<Book> result = new ArrayList<Book>();
-		
+	private void saveBookData(List<Document> documents) {
 		for (int i = 0; i < documents.size(); i++) {
 			Book book = convertToBook(documents.get(i));
-			Book bookData = bookDao.saveAndFlush(book);
-			
-			result.add(bookData);
+			bookDao.saveAndFlush(book);
 		}
-		
-		return result;
 	}
 	
-	private void saveSearchHistory(SearchHistory history) {
+	private void saveSearchHistory(String query, int size, String category, int page, String sort, String target) {
+		SearchHistory history = new SearchHistory();
+		if (category == null || category.length() == 0)
+			history.setCategory(0);
+		else
+			history.setCategory(Integer.parseInt(category));
+		history.setPage(page);
+		history.setQuery(query);
+		history.setSize(size);
+		history.setSort(sort);
+		history.setTitle(target);
+		
 		searchHistoryDao.saveAndFlush(history);
 	}
 	
