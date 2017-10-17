@@ -44,6 +44,13 @@ Released under the MIT license: http://jsbin.mit-license.org
           vertical-align: top;
           border-bottom: 1px solid #ccc;
       }
+      .pop-layer {display:none; position: absolute; top: 50%; left: 50%; width: 410px; height:auto;  background-color:#fff; border: 5px solid #3571B5; z-index: 10;}  
+      .pop-layer .pop-container {padding: 20px 25px;}
+      .pop-layer p.ctxt {color: #666; line-height: 25px;}
+      .pop-layer .btn-r {width: 100%; margin:10px 0 20px; padding-top: 10px; border-top: 1px solid #DDD; text-align:right;}
+
+      a.cbtn {display:inline-block; height:25px; padding:0 14px 0; border:1px solid #304a8a; background-color:#3f5a9d; font-size:13px; color:#fff; line-height:25px;} 
+      a.cbtn:hover {border: 1px solid #091940; background-color:#1f326a; color:#fff;}
   </style>
   <script src="http://code.jquery.com/jquery-1.11.2.min.js"></script>
   <script src="http://code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
@@ -84,8 +91,10 @@ Released under the MIT license: http://jsbin.mit-license.org
 
         var str = '';
         for (var data in datas) {
+          //01.
+// <a href="#" class="btn-example" onclick="layer_open('layer1');return false;">예제-1 보기</a>
           str += '<tr>';
-          str += '<td>' + datas[data].title + '</td>';
+          str += '<td><a href="#" class="btn-example" onclick="layer_open(\\"' + datas[data].isbn + '\\");return false;">' + datas[data].title + '</a></td>';
           str += '<td><a href="' + datas[data].url + '" target="_blank"><image src="' + datas[data].thumbnail + '"/></a></td>';
           str += '<td>' + datas[data].authors + '</td>';
           str += '<td>' + datas[data].publisher + '</td>';
@@ -95,6 +104,8 @@ Released under the MIT license: http://jsbin.mit-license.org
           str += '<td>' + datas[data].contents + '</td>';
           str += '<td><input type="checkbox" id="bookMarkerInfo" value="' + datas[data].isbn + '">북마크</td>';
           str += '</tr>';
+
+          // console.log(str);
         }
 
         $('#result').html(str);
@@ -164,8 +175,64 @@ Released under the MIT license: http://jsbin.mit-license.org
               }
           })
     }
+    function layer_open(isbn) {
+
+      var queryUrl = '/search/detail?isbn?' + isbn;
+          console.log(queryUrl);
+          $.ajax({
+              url:queryUrl,
+              dataType:'json',
+              success:function(datas) {
+                var temp = $('#layer1');   //레이어의 id를 temp변수에 저장
+                var bg = temp.prev().hasClass('bg');  //dimmed 레이어를 감지하기 위한 boolean 변수
+
+                if(bg){
+                  $('.layer').fadeIn();
+                }else{
+                  temp.fadeIn();  //bg 클래스가 없으면 일반레이어로 실행한다.
+                }
+
+                // 화면의 중앙에 레이어를 띄운다.
+                if (temp.outerHeight() < $(document).height() ) temp.css('margin-top', '-'+temp.outerHeight()/2+'px');
+                else temp.css('top', '0px');
+                if (temp.outerWidth() < $(document).width() ) temp.css('margin-left', '-'+temp.outerWidth()/2+'px');
+                else temp.css('left', '0px');
+
+                temp.find('a.cbtn').click(function(e){
+                  if(bg){
+                    $('.layer').fadeOut();
+                  }else{
+                    temp.fadeOut();   //'닫기'버튼을 클릭하면 레이어가 사라진다.
+                  }
+                  e.preventDefault();
+                });
+
+                var str = '';
+                str += '<ul>';
+                str += '<li>' + data.title + '</li>';
+                str += '<li><image src="' + datas[data].thumbnail + '"/></li>';
+                str += '<li>' + data.authors + '</li>';
+                str += '<li>' + data.translators + '</li>';
+                str += '<li>isbn:' + data.isbn + '</li>';
+                str += '<li>' + data.status + '</li>';
+                str += '<li>출판일:' + data.datetime + '</li>';
+                str += '<li>가격' + data.price + '</li>';
+                str += '<li>세일가격' + data.sale_price + '</li>';
+                str += '</ul>';
+
+                $('#detailView').html(str);
+              }
+          })
+
+      
+    }
   </script>
   <script>
+    $('.layer .bg').click(function(e){
+        $('.layer').fadeOut();
+        e.preventDefault();
+      });
+
     $(function(){
       $('#search').click(function(){
         searchBook();
@@ -201,7 +268,67 @@ Released under the MIT license: http://jsbin.mit-license.org
               }
           })
       })
+      //pagingLastSearch
+      $('#pagingLastSearch').click(function(){
+        var queryUrl = '/search/listpage?page=' + $('#page').val() + '&size=' + $('#size option:selected').val() + '&sort=' + $('#historySort option:selected').val();
+          console.log(queryUrl);
+          $.ajax({
+              url:queryUrl,
+              dataType:'json',
+              success:function(res){
+                var datas = res.documents;
+                drawList(datas);
+                var lastPageIndex = parseInt(res.meta.total_count / parseInt($('#size').val()));
+                if (lastPageIndex > 50)
+                  lastPageIndex = 50;
 
+                var start = 1;
+                var end = 10;
+                var p = parseInt($('#page').val());
+                if (p <= 10) {
+                  start = 1;
+                  end = 10;
+                }
+                else if (p > 10 && p <= 20) {
+                  start = 11;
+                  end = 20;
+                }
+                else if (p > 20 && p <= 30) {
+                  start = 21;
+                  end = 30;
+                }
+                else if (p > 30 && p <= 40) {
+                  start = 31;
+                  end = 40;
+                }
+                else if (p > 40 && p <= 50) {
+                  start = 41;
+                  end = lastPageIndex;
+                }
+
+                if (end >= lastPageIndex)
+                  end = lastPageIndex;
+
+                console.log('start:' + start + ', end:' + end + 'res.meta.total_count:' + res.meta.total_count + 'lastPageIndex:' + lastPageIndex);
+                
+                $('#lastPageIndex').val(lastPageIndex);
+
+                var pageIndex = '<a href="javscript:goFirst();"> << </a>';
+                pageIndex += '<a href="javascript:goPrev();"> < </a>';
+                for (var i = start; i <= end; i++) {
+                  if  (i == parseInt($('#page').val())) {
+                    pageIndex += '| ' + i + ' ';
+                  } else {
+                    pageIndex += '| <a href="javascript:goPage(' + i + ');">' + i + ' <a>';
+                  }
+                }
+                pageIndex += '| <a href="javascript:goNext();"> > </a><a href="javascript:goLast();"> >> </a>';
+                console.log(pageIndex);
+
+                $('#pageIndexTag').html(pageIndex);
+              }
+          })
+      })
       $('#deleteLastSearchResult').click(function(){
         var queryUrl = '/search/delete/all';
           console.log(queryUrl);
@@ -332,101 +459,136 @@ Released under the MIT license: http://jsbin.mit-license.org
   </script>
 </head>
 <body>
-    <table class="type09">
+  <div id="layer1" class="pop-layer">
+    <div class="pop-container">
+      <div class="pop-conts">
+        <!--content //-->
+        <p class="ctxt mb20" id="detailView">
+
+        </p>
+
+        <div class="btn-r">
+          <a href="#" class="cbtn">Close</a>
+        </div>
+        <!--// content-->
+      </div>
+    </div>
+  </div>
+  <table class="type09">
+    <tr>
+      <th colspan="6" scope="cols" align="center">책 검색</th>
+    </tr>
+    <tr>
+      <td id="category"></td>
+      <td>
+        <select id="target">
+          <option value="all">전체</option>
+          <option value="title">제목에서 검색</option>
+          <option value="isbn">ISBN에서 검색</option>
+          <option value="keyword">주제어에서 검색</option>
+          <option value="contents">목차에서 검색</option>
+          <option value="overview">책소개에서 검색</option>
+          <option value="publisher">출판사에서 검색</option>
+       </select>
+      </td>
+      <td>
+        <select id="sort">
+          <option value="accuray">정확도순</option>
+          <option value="recency">최신순</option>
+        </select>
+      </td>
+      <td>
+        <input type="text" id="query" size="50"/>
+        <input type="hidden" id="page" value="1"/>
+        <input type="hidden" id="lastPageIndex" value="1"/>
+      </td>
+      <td>
+        <select id="size">
+          <option value="10">10</option>
+          <option value="20">20</option>
+          <option value="30">30</option>
+          <option value="40">40</option>
+          <option value="50">50</option>
+        </select>
+      </td>
+      <td>
+        <input type="button" id="search" value="검색" />
+      </td>
+    </tr>
+  </table>
+  <table class="type09">
+    <tr>
+      <th colspan="4" scope="cols" align="center">
+        최근 검색어 <input type="button" id="deleteLastSearch" value="삭제"/>
+      </th>
+    </tr>
+    <tr>
+      <td colspan="4" id="history" align="left"><td>
+    </tr>
+    <tr>
+      <th colspan="4" scope="cols" align="center">이전 검색 결과 조회</th>
+    </tr>
+    <tr>
+      <td>
+        <input type="button" id="lastSearch" value="이전 검색 결과 전체 조회"/>
+      </td>
+      <td>
+        <input type="button" id="pagingLastSearch" value="이전 검색 결과 목록 조회"/>
+      </td>
+      <td>
+        <input type="button" id="deleteLastSearchResult" value="이전 검색 결과 삭제"/>
+      </td>
+      <td>
+        <select id="historySort">
+          <option value="title,desc">제목내림차순</option>
+          <option value="title,asc">제목오름차순</option>
+          <option value="datetime,desc">날짜내림차순</option>
+          <option value="datetime,asc">날짜오름차순</option>
+          <option value="price,desc">가격내림차순</option>
+          <option value="price,asc">가격내림차순</option>
+        </select>
+      </td>
+    </tr>
+    <tr>
+      <th colspan="4" scope="cols" align="center">북마크</th>
+    </tr>
+    <tr>
+      <td>
+        <input type="button" id="bookMarkerSearch" value="북마크 조회"/>
+      </td>
+      <td>
+        <input type="button" id="bookMarkerAdd" value="북마크 추가"/>
+      </td>
+      <td>
+        <input type="button" id="bookMarkerDelete" value="선택된 북마크 삭제"/>
+      </td>
+      <td>
+        <input type="button" id="bookMarkerDeleteAll" value="북마크 전체 삭제"/>
+      </td>
+    </tr>
+  </table>
+  <p/>
+  <p/>
+  <table class="type09">
+    <thead>
+      <tr><td>검색결과</td></tr>
       <tr>
-        <td id="category"></td>
-        <td>
-          <select id="target">
-            <option value="all">전체</option>
-            <option value="title">제목에서 검색</option>
-            <option value="isbn">ISBN에서 검색</option>
-            <option value="keyword">주제어에서 검색</option>
-            <option value="contents">목차에서 검색</option>
-            <option value="overview">책소개에서 검색</option>
-            <option value="publisher">출판사에서 검색</option>
-         </select>
-        </td>
-        <td>
-          <select id="sort">
-            <option value="accuray">정확도순</option>
-            <option value="recency">최신순</option>
-          </select>
-        </td>
-        <td>
-          <input type="text" id="query" size="50"/>
-          <input type="hidden" id="page" value="1"/>
-          <input type="hidden" id="lastPageIndex" value="1"/>
-        </td>
-        <td>
-          <select id="size">
-            <option value="10">10</option>
-            <option value="20">20</option>
-            <option value="30">30</option>
-            <option value="40">40</option>
-            <option value="50">50</option>
-          </select>
-        </td>
-        <td>
-          <input type="button" id="search" value="검색" />
-        </td>
+        <th scope="cols">제목</th>
+        <th scope="cols">사진</th>
+        <th scope="cols">저자</th>
+        <th scope="cols">출판사</th>
+        <!-- th scope="cols">isbn</th -->
+        <th scope="cols">price</th>
+        <th scope="cols">sale</th>
+        <th scope="cols">contents</th>
+        <th scope="cols" id="bookMarkerRow">북마크</th>
       </tr>
-    </table>
-    <p/>
-    <table class="type09">
-      <tr>
-        <td>최근 검색어</td>
-        <td id="history" ><td>
-        <td>
-          <input type="button" id="deleteLastSearch" value="삭제"/>
-        </td>
-      </tr>
-    </table>
-    <p/>
-    <p/>
-    <table class="type09">
-      <tr>
-        <td>
-          <input type="button" id="lastSearch" value="이전 검색 결과 조회"/>
-        </td>
-        <td>
-          <input type="button" id="deleteLastSearchResult" value="이전 검색 결과 삭제"/>
-        </td>
-        <td>
-          <input type="button" id="bookMarkerSearch" value="북마크 조회"/>
-        </td>
-        <td>
-          <input type="button" id="bookMarkerAdd" value="북마크 추가"/>
-        </td>
-        <td>
-          <input type="button" id="bookMarkerDelete" value="선택된 북마크 삭제"/>
-        </td>
-        <td>
-          <input type="button" id="bookMarkerDeleteAll" value="북마크 전체 삭제"/>
-        </td>
-      </tr>
-    </table>
-    <p/>
-    <p/>
-    <table class="type09">
-      <thead>
-        <tr><td>검색결과</td></tr>
-        <tr>
-          <th scope="cols">제목</th>
-          <th scope="cols">사진</th>
-          <th scope="cols">저자</th>
-          <th scope="cols">출판사</th>
-          <!-- th scope="cols">isbn</th -->
-          <th scope="cols">price</th>
-          <th scope="cols">sale</th>
-          <th scope="cols">contents</th>
-          <th scope="cols" id="bookMarkerRow">북마크</th>
-        </tr>
-      </thead>
-      <tbody id="result">
-      </tbody>
-    </table>
-    <p/>
-    <p align="center" id="pageIndexTag">
-    </p>
+    </thead>
+    <tbody id="result">
+    </tbody>
+  </table>
+  <p/>
+  <p align="center" id="pageIndexTag">
+  </p>
 </body>
 </html>

@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -18,7 +19,10 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.client.utils.URIBuilder;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -36,6 +40,7 @@ import com.clevekim.booksearch.dao.CategoryDao;
 import com.clevekim.booksearch.model.entity.Book;
 import com.clevekim.booksearch.model.entity.BookMarker;
 import com.clevekim.booksearch.model.entity.Document;
+import com.clevekim.booksearch.model.entity.Meta;
 import com.clevekim.booksearch.model.entity.SearchHistory;
 import com.clevekim.booksearch.model.entity.BookSearchResponse;
 import com.clevekim.booksearch.model.entity.Category;
@@ -61,7 +66,7 @@ public class BookSearchRestController {
 	private CategoryDao categoryDao;
 
 	@RequestMapping("/search")
-	public BookSearchResponse insertBook(@RequestParam("query") String query, 
+	public BookSearchResponse searchBook(@RequestParam("query") String query, 
 			@RequestParam("sort") String sort,
 			@RequestParam("page") int page,
 			@RequestParam("size") int size,
@@ -211,11 +216,68 @@ public class BookSearchRestController {
 		return book;
 	}
 	
+	private Document convertToDocument(Book book) {
+		Document document = new Document();
+		String []authtors = book.getAuthors().split(",");
+		document.setAuthors(Arrays.asList(authtors));
+		document.setBarcode(book.getBarcode());
+		document.setCategory(book.getCategory());
+		document.setContents(book.getContents());
+		document.setDatetime(book.getDatetime());
+		document.setEbook_barcode(book.getEbook_barcode());
+		document.setIsbn(book.getIsbn());
+		document.setPrice(book.getPrice());
+		document.setPublisher(book.getPublisher());
+		document.setSale_price(book.getSale_price());
+		document.setSale_yn(book.getSale_yn());
+		document.setStatus(book.getStatus());
+		document.setThumbnail(book.getThumbnail());
+		document.setTitle(book.getTitle());
+		document.setUrl(book.getUrl());
+		String []translators = book.getTranslators().split(",");
+		document.setTranslators(Arrays.asList(translators));
+		
+		return document;
+	}
+	
 	@RequestMapping("/search/list")
-	public List<Book> searchedList(Model model) {
+	public List<Book> searchedList() {
 		List<Book> books = bookDao.findAll();
 		
 		return books;
+	}
+	
+	@RequestMapping("/search/listpage")
+	public BookSearchResponse searchedListWithPaging(Pageable pageable) { 
+		BookSearchResponse res = new BookSearchResponse();
+		Meta meta = new Meta();
+		meta.setIs_end(false);
+		meta.setPagable_count((int)bookDao.count());//.setPagable_count(int)(bookDao.count());
+		meta.setTotal_count((int)bookDao.count());
+		List<Book> books = null;
+		if (pageable.getPageSize() == bookDao.count()) {
+			books = bookDao.findAll(pageable.getSort());
+		} else {
+			Page<Book> pages = bookDao.findAll(pageable);
+			books = pages.getContent();
+		}
+		logger.debug("bookDao count {}", bookDao.count());
+		
+		res.setMeta(meta);
+		
+		List<Document> documents = new ArrayList<Document>();
+		logger.debug("content count {}", books.size());
+		for (int i = 0; i < books.size(); i++) {
+			documents.add(convertToDocument(books.get(i)));
+		}
+		res.setBooks(documents);
+		
+		return res;
+	}
+	
+	@RequestMapping("/search/detal")
+	public Book searchedDetail(@RequestParam("isbn") String isbn) {
+		return bookDao.findOne(isbn);
 	}
 	
 	@RequestMapping("/search/delete")

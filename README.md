@@ -21,5 +21,9 @@
 * /history/delete : 검색 조건 히스토리 한건 삭제
 * /history/delete/all : 검색 조건 히스토리 전체 삭제
 
-## 사용자 관리
-* /user/create : 새로운 사용자 등록
+## 북마크
+* /bookmarker : 북마크 추가
+* /bookmarker/list : 북마크된 목록 조회
+* /bookmarker/delete : 선택된 북마크 삭제
+* /bookmarker/delete/all : 전체 북마크 삭제
+
