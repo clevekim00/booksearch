@@ -1,46 +1,39 @@
 package com.clevekim.booksearch;
 
-import com.clevekim.booksearch.BooksearchApplication;
 import com.clevekim.booksearch.dao.BookDao;
 import com.clevekim.booksearch.dao.BookMarkerDao;
 import com.clevekim.booksearch.dao.CategoryDao;
 import com.clevekim.booksearch.dao.SearchHistoryDao;
+import com.clevekim.booksearch.model.entity.BookSearchResponse;
+import com.clevekim.booksearch.model.entity.Document;
 import com.clevekim.booksearch.view.BookSearchRestController;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sun.net.httpserver.Headers;
+import com.google.gson.Gson;
 
-import org.apache.http.client.methods.RequestBuilder;
-import org.apache.log4j.Logger;
-import org.junit.Before;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDocs;
-import org.springframework.boot.test.autoconfigure.web.client.RestClientTest;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.MediaType;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.test.context.web.WebAppConfiguration;
-import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
-import java.util.ArrayList;
-import java.util.List;
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.CoreMatchers.is;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import static org.springframework.test.web.servlet.setup.MockMvcBuilders.standaloneSetup;
+
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.*;
 
 @RunWith(SpringRunner.class)
 @WebMvcTest(BookSearchRestController.class)
 public class BookSearchRestControllerTests {
+	
+	private static final Logger logger =
+			LoggerFactory.getLogger(BookSearchRestControllerTests.class);
+	
 	@Autowired
 	private MockMvc mockMvc;
 	@MockBean
@@ -52,24 +45,109 @@ public class BookSearchRestControllerTests {
 	@MockBean
 	BookMarkerDao bookMarkerDao;
 	
+	BookSearchResponse bookSearchResponse;
+	String searchResult;
     @Test
     public void getSearch() throws Exception {
-    		mockMvc.perform(get("/search?query=java&sort=accuray&page=1&size=10&target=title&category=33"))
+    		MvcResult result = mockMvc.perform(get("/search?query=java&sort=accuray&page=1&size=10&target=title&category=33"))
                 .andExpect(status().isOk())
                 .andReturn();
+    		
+    		searchResult = result.getResponse().getContentAsString();
+    		assertThat(searchResult).isNotEmpty();
+    		
+    		Gson gson = new Gson();
+    		bookSearchResponse = gson.fromJson(searchResult, BookSearchResponse.class);
     }
     
     @Test
     public void getSearchedList() throws Exception {
+	    	mockMvc.perform(get("/search?query=java&sort=accuray&page=1&size=10&target=title&category=33"))
+	        .andExpect(status().isOk())
+	        .andReturn();
+	    	
     		MvcResult result = mockMvc.perform(get("/search/list"))
                 .andExpect(status().isOk())
                 .andReturn();
+    		
+    		String res = result.getResponse().getContentAsString();
+    		logger.debug("Response {}", res);
+    		assertThat(res).isNotEmpty();
     }
+    
+//    @Test
+//    public void getSearchedListPage() throws Exception {
+//	    	mockMvc.perform(get("/search?query=java&sort=accuray&page=1&size=10&target=title&category=33"))
+//	        .andExpect(status().isOk())
+//	        .andReturn();
+//    	
+////    		MvcResult result = mockMvc.perform(get("/search/listpage?page=1&size=10&sort=title,asc"))
+////                .andExpect(status().isOk())
+////                .andReturn();
+//    		MvcResult result = mockMvc.perform(get("/search/listpage?page=1&size=10&sort=title,asc"))
+//                    .andExpect(status().isOk())
+//                    .andReturn();
+//    		
+//    		String res = result.getResponse().getContentAsString();
+//    		logger.debug("Response {}", res);
+//    		assertThat(res).isNotEmpty();
+//    }
     
     @Test
     public void getSearchedListDelete() throws Exception {
     		MvcResult result = mockMvc.perform(get("/search/delete/all"))
                 .andExpect(status().isOk())
                 .andReturn();
+
+    		String res = result.getResponse().getContentAsString();
+    		logger.debug("Response {}", res);
+    		assertThat(res).isNotEmpty();
+    }
+    
+    @Test
+    public void bookMarkerAdd() throws Exception {
+    		String data = "8909081325 9788909081320,8988379799 9788988379790,";
+    		MvcResult result = mockMvc.perform(get("/bookmarker?bookMarkerInfo=" + data))
+                .andExpect(status().isOk())
+                .andReturn();
+    		
+    		String res = result.getResponse().getContentAsString();
+    		logger.debug("Response {}", res);
+    		assertThat(res).isNotEmpty();
+    }
+    
+    @Test
+    public void bookMarkerSelectedDelete() throws Exception {
+		String data = "8909081325 9788909081320,";
+    		
+    		MvcResult result = mockMvc.perform(get("/bookmarker/delete?bookMarkerInfo=" + data))
+                .andExpect(status().isOk())
+                .andReturn();
+    		
+    		String res = result.getResponse().getContentAsString();
+    		logger.debug("Response {}", res);
+    		assertThat(res).isNotEmpty();
+    }
+    
+    @Test
+    public void bookMarkerAllDelete() throws Exception {
+    		MvcResult result = mockMvc.perform(get("/bookmarker/delete/all"))
+                .andExpect(status().isOk())
+                .andReturn();
+    		
+    		String res = result.getResponse().getContentAsString();
+    		logger.debug("Response {}", res);
+    		assertThat(res).isEmpty();
+    }
+
+    @Test
+    public void bookMarkerList() throws Exception {
+    		MvcResult result = mockMvc.perform(get("/bookmarker/list"))
+                .andExpect(status().isOk())
+                .andReturn();
+    		
+    		String res = result.getResponse().getContentAsString();
+    		logger.debug("Response {}", res);
+    		assertThat(res).isNotEmpty();
     }
 }

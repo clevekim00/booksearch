@@ -94,7 +94,7 @@ Released under the MIT license: http://jsbin.mit-license.org
         //01.
 // <a href="#" class="btn-example" onclick="layer_open('layer1');return false;">예제-1 보기</a>
         str += '<tr>';
-        str += '<td><a href="#" class="btn-example" onclick="layer_open(\\"' + datas[data].isbn + '\\");return false;">' + datas[data].title + '</a></td>';
+        str += '<td><a href="#" class="btn-example" onclick="layer_open(\'' + datas[data].isbn + '\');return false;">' + datas[data].title + '</a></td>';
         str += '<td><a href="' + datas[data].url + '" target="_blank"><image src="' + datas[data].thumbnail + '"/></a></td>';
         str += '<td>' + datas[data].authors + '</td>';
         str += '<td>' + datas[data].publisher + '</td>';
@@ -105,7 +105,7 @@ Released under the MIT license: http://jsbin.mit-license.org
         str += '<td><input type="checkbox" id="bookMarkerInfo" value="' + datas[data].isbn + '">북마크</td>';
         str += '</tr>';
 
-        // console.log(str);
+        console.log(str);
       }
 
       $('#result').html(str);
@@ -185,12 +185,12 @@ Released under the MIT license: http://jsbin.mit-license.org
     }
     function layer_open(isbn) {
 
-      var queryUrl = '/search/detail?isbn?' + isbn;
+      var queryUrl = '/search/detail?isbn=' + isbn;
           console.log(queryUrl);
           $.ajax({
               url:queryUrl,
               dataType:'json',
-              success:function(datas) {
+              success:function(data) {
                 var temp = $('#layer1');   //레이어의 id를 temp변수에 저장
                 var bg = temp.prev().hasClass('bg');  //dimmed 레이어를 감지하기 위한 boolean 변수
 
@@ -218,7 +218,7 @@ Released under the MIT license: http://jsbin.mit-license.org
                 var str = '';
                 str += '<ul>';
                 str += '<li>' + data.title + '</li>';
-                str += '<li><image src="' + datas[data].thumbnail + '"/></li>';
+                str += '<li><image src="' + data.thumbnail + '"/></li>';
                 str += '<li>' + data.authors + '</li>';
                 str += '<li>' + data.translators + '</li>';
                 str += '<li>isbn:' + data.isbn + '</li>';

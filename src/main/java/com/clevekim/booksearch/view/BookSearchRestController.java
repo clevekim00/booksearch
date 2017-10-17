@@ -275,7 +275,7 @@ public class BookSearchRestController {
 		return res;
 	}
 	
-	@RequestMapping("/search/detal")
+	@RequestMapping("/search/detail")
 	public Book searchedDetail(@RequestParam("isbn") String isbn) {
 		return bookDao.findOne(isbn);
 	}
