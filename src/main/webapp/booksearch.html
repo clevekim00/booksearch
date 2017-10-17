@@ -89,26 +89,78 @@ Released under the MIT license: http://jsbin.mit-license.org
 
     function drawList(datas) {
 
-        var str = '';
-        for (var data in datas) {
-          //01.
+      var str = '';
+      for (var data in datas) {
+        //01.
 // <a href="#" class="btn-example" onclick="layer_open('layer1');return false;">예제-1 보기</a>
-          str += '<tr>';
-          str += '<td><a href="#" class="btn-example" onclick="layer_open(\\"' + datas[data].isbn + '\\");return false;">' + datas[data].title + '</a></td>';
-          str += '<td><a href="' + datas[data].url + '" target="_blank"><image src="' + datas[data].thumbnail + '"/></a></td>';
-          str += '<td>' + datas[data].authors + '</td>';
-          str += '<td>' + datas[data].publisher + '</td>';
-          // str += '<td>' + datas[data].isbn + '</td>';
-          str += '<td>' + datas[data].price + '</td>';
-          str += '<td>' + datas[data].sale_price + '</td>';
-          str += '<td>' + datas[data].contents + '</td>';
-          str += '<td><input type="checkbox" id="bookMarkerInfo" value="' + datas[data].isbn + '">북마크</td>';
-          str += '</tr>';
+        str += '<tr>';
+        str += '<td><a href="#" class="btn-example" onclick="layer_open(\\"' + datas[data].isbn + '\\");return false;">' + datas[data].title + '</a></td>';
+        str += '<td><a href="' + datas[data].url + '" target="_blank"><image src="' + datas[data].thumbnail + '"/></a></td>';
+        str += '<td>' + datas[data].authors + '</td>';
+        str += '<td>' + datas[data].publisher + '</td>';
+        // str += '<td>' + datas[data].isbn + '</td>';
+        str += '<td>' + datas[data].price + '</td>';
+        str += '<td>' + datas[data].sale_price + '</td>';
+        str += '<td>' + datas[data].contents + '</td>';
+        str += '<td><input type="checkbox" id="bookMarkerInfo" value="' + datas[data].isbn + '">북마크</td>';
+        str += '</tr>';
 
-          // console.log(str);
+        // console.log(str);
+      }
+
+      $('#result').html(str);
+    }
+
+    function drawPageList(meta) {
+
+      var lastPageIndex = parseInt(meta.total_count / parseInt($('#size').val()));
+      if (lastPageIndex > 50)
+        lastPageIndex = 50;
+
+      var start = 1;
+      var end = 10;
+      var p = parseInt($('#page').val());
+      if (p <= 10) {
+        start = 1;
+        end = 10;
+      }
+      else if (p > 10 && p <= 20) {
+        start = 11;
+        end = 20;
+      }
+      else if (p > 20 && p <= 30) {
+        start = 21;
+        end = 30;
+      }
+      else if (p > 30 && p <= 40) {
+        start = 31;
+        end = 40;
+      }
+      else if (p > 40 && p <= 50) {
+        start = 41;
+        end = lastPageIndex;
+      }
+
+      if (end >= lastPageIndex)
+        end = lastPageIndex;
+
+      console.log('start:' + start + ', end:' + end + 'meta.total_count:' + meta.total_count);
+      
+      $('#lastPageIndex').val(lastPageIndex);
+
+      var pageIndex = '<a href="javscript:goFirst();"> << </a>';
+      pageIndex += '<a href="javascript:goPrev();"> < </a>';
+      for (var i = start; i <= end; i++) {
+        if  (i == parseInt($('#page').val())) {
+          pageIndex += '| ' + i + ' ';
+        } else {
+          pageIndex += '| <a href="javascript:goPage(' + i + ');">' + i + ' <a>';
         }
+      }
+      pageIndex += '| <a href="javascript:goNext();"> > </a><a href="javascript:goLast();"> >> </a>';
+      console.log(pageIndex);
 
-        $('#result').html(str);
+      $('#pageIndexTag').html(pageIndex);
     }
 
     function searchBook() {
@@ -127,51 +179,7 @@ Released under the MIT license: http://jsbin.mit-license.org
                 console.log(datas);
                 var datas = res.documents;
                 drawList(datas);
-                var lastPageIndex = parseInt(res.meta.total_count / parseInt($('#size').val()));
-                if (lastPageIndex > 50)
-                  lastPageIndex = 50;
-
-                var start = 1;
-                var end = 10;
-                var p = parseInt($('#page').val());
-                if (p <= 10) {
-                  start = 1;
-                  end = 10;
-                }
-                else if (p > 10 && p <= 20) {
-                  start = 11;
-                  end = 20;
-                }
-                else if (p > 20 && p <= 30) {
-                  start = 21;
-                  end = 30;
-                }
-                else if (p > 30 && p <= 40) {
-                  start = 31;
-                  end = 40;
-                }
-                else if (p > 40 && p <= 50) {
-                  start = 41;
-                  end = lastPageIndex;
-                }
-
-                console.log('start:' + start + ', end:' + end + 'res.meta.total_count:' + res.meta.total_count);
-                
-                $('#lastPageIndex').val(lastPageIndex);
-
-                var pageIndex = '<a href="javscript:goFirst();"> << </a>';
-                pageIndex += '<a href="javascript:goPrev();"> < </a>';
-                for (var i = start; i <= end; i++) {
-                  if  (i == parseInt($('#page').val())) {
-                    pageIndex += '| ' + i + ' ';
-                  } else {
-                    pageIndex += '| <a href="javascript:goPage(' + i + ');">' + i + ' <a>';
-                  }
-                }
-                pageIndex += '| <a href="javascript:goNext();"> > </a><a href="javascript:goLast();"> >> </a>';
-                console.log(pageIndex);
-
-                $('#pageIndexTag').html(pageIndex);
+                drawPageList(res.meta);
               }
           })
     }
@@ -278,54 +286,7 @@ Released under the MIT license: http://jsbin.mit-license.org
               success:function(res){
                 var datas = res.documents;
                 drawList(datas);
-                var lastPageIndex = parseInt(res.meta.total_count / parseInt($('#size').val()));
-                if (lastPageIndex > 50)
-                  lastPageIndex = 50;
-
-                var start = 1;
-                var end = 10;
-                var p = parseInt($('#page').val());
-                if (p <= 10) {
-                  start = 1;
-                  end = 10;
-                }
-                else if (p > 10 && p <= 20) {
-                  start = 11;
-                  end = 20;
-                }
-                else if (p > 20 && p <= 30) {
-                  start = 21;
-                  end = 30;
-                }
-                else if (p > 30 && p <= 40) {
-                  start = 31;
-                  end = 40;
-                }
-                else if (p > 40 && p <= 50) {
-                  start = 41;
-                  end = lastPageIndex;
-                }
-
-                if (end >= lastPageIndex)
-                  end = lastPageIndex;
-
-                console.log('start:' + start + ', end:' + end + 'res.meta.total_count:' + res.meta.total_count + 'lastPageIndex:' + lastPageIndex);
-                
-                $('#lastPageIndex').val(lastPageIndex);
-
-                var pageIndex = '<a href="javscript:goFirst();"> << </a>';
-                pageIndex += '<a href="javascript:goPrev();"> < </a>';
-                for (var i = start; i <= end; i++) {
-                  if  (i == parseInt($('#page').val())) {
-                    pageIndex += '| ' + i + ' ';
-                  } else {
-                    pageIndex += '| <a href="javascript:goPage(' + i + ');">' + i + ' <a>';
-                  }
-                }
-                pageIndex += '| <a href="javascript:goNext();"> > </a><a href="javascript:goLast();"> >> </a>';
-                console.log(pageIndex);
-
-                $('#pageIndexTag').html(pageIndex);
+                drawPageList(res.meta);
               }
           })
       })
