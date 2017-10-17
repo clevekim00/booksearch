@@ -6,7 +6,10 @@
 * jQuery 1.11.2
 
 ## DB
-* h2
+* h2 Hibernate
+
+## 검색 소스
+* https://developers.kakao.com/docs/restapi/search#책-검색
 
 # Restful API
 ## Search
@@ -30,4 +33,4 @@
 * /bookmarker/delete/all : 전체 북마크 삭제
 
 # URL
-& http://localhost:8080/booksearch.html
+* http://localhost:8080/booksearch.html
