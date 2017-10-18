@@ -389,7 +389,7 @@ Released under the MIT license: http://jsbin.mit-license.org
           success:function(datas){
               var str = '';
               for(var data in datas) {
-                  str += '<option value=' + datas[data].category + '>' + datas[data].firstSection + ' ' + datas[data].secondSection + '</option>';
+                  str += '<option value=' + datas[data].category + '>' + datas[data].category + ' ' + datas[data].firstSection + ', ' + datas[data].secondSection + '</option>';
               }
               $('#category').html('<select name="category">'+str+'</select>');
           }

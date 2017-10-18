@@ -56,7 +56,7 @@ public class BookSearchRestController {
 			LoggerFactory.getLogger(BookSearchRestController.class);
 	
 	private static final String USER_AGENT = "Mozilla/5.0";
-	private static final String GET_URL = "https://dapi.kakao.com/v2/search/book";
+	private static final String API_URL = "https://dapi.kakao.com/v2/search/book";
 	private static final String API_KEY = "KakaoAK e0f21ef8a75dde9089cc8d1feac3bb55";
 	private static final String CATEGORY_DATA_FILE = "data/category.txt";
 	private static final int MAX_PAGE = 50;
@@ -110,18 +110,18 @@ public class BookSearchRestController {
 		try {
 			httpClient = HttpClients.createDefault();
 
-			HttpPost httpPost = new HttpPost(GET_URL);
+			HttpPost httpPost = new HttpPost(API_URL);
 			httpPost.addHeader("User-Agent", USER_AGENT);
 			httpPost.addHeader("Authorization", API_KEY);
 			
-			 List<NameValuePair> params = new ArrayList<NameValuePair>(2);
-	         params.add(new BasicNameValuePair("query", query));
-	         params.add(new BasicNameValuePair("size", String.valueOf(size)));
-	         params.add(new BasicNameValuePair("page", String.valueOf(page)));
-	         params.add(new BasicNameValuePair("sort",  sort));
-	         params.add(new BasicNameValuePair("target",  target));
-	         params.add(new BasicNameValuePair("category",  category));
-	         httpPost.setEntity(new UrlEncodedFormEntity(params, "UTF-8"));
+			List<NameValuePair> params = new ArrayList<NameValuePair>();
+	        params.add(new BasicNameValuePair("query", query));
+	        params.add(new BasicNameValuePair("size", String.valueOf(size)));
+	        params.add(new BasicNameValuePair("page", String.valueOf(page)));
+	        params.add(new BasicNameValuePair("sort",  sort));
+	        params.add(new BasicNameValuePair("target",  target));
+	        params.add(new BasicNameValuePair("category",  category));
+	        httpPost.setEntity(new UrlEncodedFormEntity(params, "UTF-8"));
 	         
 			CloseableHttpResponse httpResponse = httpClient.execute(httpPost);
 
@@ -315,6 +315,9 @@ public class BookSearchRestController {
 			return categories;
 		
 		Collections.sort(categories, new CategoryAsc());
+		Category first = categories.get(0);
+		categories.remove(0);
+		categories.add(first);
 		
 		return categories;
 	}
