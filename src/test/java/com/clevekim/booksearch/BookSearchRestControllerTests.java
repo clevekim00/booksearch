@@ -5,7 +5,6 @@ import com.clevekim.booksearch.dao.BookMarkerDao;
 import com.clevekim.booksearch.dao.CategoryDao;
 import com.clevekim.booksearch.dao.SearchHistoryDao;
 import com.clevekim.booksearch.model.entity.BookSearchResponse;
-import com.clevekim.booksearch.model.entity.Document;
 import com.clevekim.booksearch.view.BookSearchRestController;
 import com.google.gson.Gson;
 
@@ -23,8 +22,6 @@ import org.springframework.test.web.servlet.MvcResult;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-
-import java.util.List;
 
 import static org.assertj.core.api.Assertions.*;
 
