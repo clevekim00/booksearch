@@ -257,7 +257,7 @@ public class BookSearchRestController {
 		meta.setPagable_count((int)bookDao.count());//.setPagable_count(int)(bookDao.count());
 		meta.setTotal_count((int)bookDao.count());
 		List<Book> books = null;
-		if (pageable.getPageSize() == bookDao.count()) {
+		if (pageable.getPageSize() == bookDao.count() || bookDao.count() == 0) {
 			books = bookDao.findAll(pageable.getSort());
 		} else {
 			Page<Book> pages = bookDao.findAll(pageable);

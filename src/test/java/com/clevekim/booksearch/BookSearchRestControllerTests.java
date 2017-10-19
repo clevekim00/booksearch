@@ -16,6 +16,7 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.web.config.EnableSpringDataWebSupport;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -29,6 +30,7 @@ import static org.assertj.core.api.Assertions.*;
 
 @RunWith(SpringRunner.class)
 @WebMvcTest(BookSearchRestController.class)
+@EnableSpringDataWebSupport
 public class BookSearchRestControllerTests {
 	
 	private static final Logger logger =
@@ -75,23 +77,26 @@ public class BookSearchRestControllerTests {
     		assertThat(res).isNotEmpty();
     }
     
-//    @Test
-//    public void getSearchedListPage() throws Exception {
-//	    	mockMvc.perform(get("/search?query=java&sort=accuray&page=1&size=10&target=title&category=33"))
-//	        .andExpect(status().isOk())
-//	        .andReturn();
-//    	
-////    		MvcResult result = mockMvc.perform(get("/search/listpage?page=1&size=10&sort=title,asc"))
-////                .andExpect(status().isOk())
-////                .andReturn();
-//    		MvcResult result = mockMvc.perform(get("/search/listpage?page=1&size=10&sort=title,asc"))
-//                    .andExpect(status().isOk())
-//                    .andReturn();
-//    		
-//    		String res = result.getResponse().getContentAsString();
-//    		logger.debug("Response {}", res);
-//    		assertThat(res).isNotEmpty();
-//    }
+    @Test
+    public void getSearchedListPage() throws Exception {
+    		try {
+
+	    	    	mockMvc.perform(get("/search?query=java&sort=accuray&page=1&size=10&target=title&category=33"))
+	    	        .andExpect(status().isOk())
+	    	        .andReturn();
+	        	
+	    	    	MvcResult result = mockMvc.perform(get("/search/listpage?page=1&size=10&sort=title,asc"))
+	                        .andExpect(status().isOk())
+	                        .andReturn();
+	        		
+	        		String res = result.getResponse().getContentAsString();
+	        		logger.debug("Response {}", res);
+	        		assertThat(res).isNotEmpty();
+    		} catch(Exception e) {
+    			logger.error(e.toString(), e);
+    			throw e;
+    		}
+    }
     
     @Test
     public void getSearchedListDelete() throws Exception {
