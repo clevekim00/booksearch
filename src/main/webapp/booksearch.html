@@ -1,12 +1,4 @@
 <!DOCTYPE html>
-<!--
-Created using JS Bin
-http://jsbin.com
-
-Copyright (c) 2017 by anonymous (http://jsbin.com/mijamisimo/1/edit)
-
-Released under the MIT license: http://jsbin.mit-license.org
--->
 <meta name="robots" content="noindex">
 <html>
 <head>
@@ -91,8 +83,6 @@ Released under the MIT license: http://jsbin.mit-license.org
 
       var str = '';
       for (var data in datas) {
-        //01.
-// <a href="#" class="btn-example" onclick="layer_open('layer1');return false;">예제-1 보기</a>
         str += '<tr>';
         str += '<td><a href="#" class="btn-example" onclick="layer_open(\'' + datas[data].isbn + '\');return false;">' + datas[data].title + '</a></td>';
         str += '<td><a href="' + datas[data].url + '" target="_blank"><image src="' + datas[data].thumbnail + '"/></a></td>';
@@ -171,159 +161,129 @@ Released under the MIT license: http://jsbin.mit-license.org
                         '&size=' + $('#size option:selected').val()  + 
                         '&target=' + $('#target option:selected').val() + 
                         '&category=' + $('#category option:selected').val();
-          console.log(queryUrl);
-          $.ajax({
-              url:queryUrl,
-              dataType:'json',
-              success:function(res){
-                console.log(datas);
-                var datas = res.documents;
-                drawList(datas);
-                drawPageList(res.meta);
-              }
-          })
+     callApi(queryUrl, function(res){
+          console.log(datas);
+          var datas = res.documents;
+          drawList(datas);
+          drawPageList(res.meta);
+        });
     }
     function layer_open(isbn) {
-
       var queryUrl = '/search/detail?isbn=' + isbn;
-          console.log(queryUrl);
-          $.ajax({
-              url:queryUrl,
-              dataType:'json',
-              success:function(data) {
-                var temp = $('#layer1');   //레이어의 id를 temp변수에 저장
-                var bg = temp.prev().hasClass('bg');  //dimmed 레이어를 감지하기 위한 boolean 변수
+      callApi(queryUrl, function(data) {
+            var temp = $('#layer1');   //레이어의 id를 temp변수에 저장
+            var bg = temp.prev().hasClass('bg');  //dimmed 레이어를 감지하기 위한 boolean 변수
 
-                if(bg){
-                  $('.layer').fadeIn();
-                }else{
-                  temp.fadeIn();  //bg 클래스가 없으면 일반레이어로 실행한다.
-                }
+            if(bg){
+              $('.layer').fadeIn();
+            }else{
+              temp.fadeIn();  //bg 클래스가 없으면 일반레이어로 실행한다.
+            }
 
-                // 화면의 중앙에 레이어를 띄운다.
-                if (temp.outerHeight() < $(document).height() ) temp.css('margin-top', '-'+temp.outerHeight()/2+'px');
-                else temp.css('top', '0px');
-                if (temp.outerWidth() < $(document).width() ) temp.css('margin-left', '-'+temp.outerWidth()/2+'px');
-                else temp.css('left', '0px');
+            // 화면의 중앙에 레이어를 띄운다.
+            if (temp.outerHeight() < $(document).height() ) temp.css('margin-top', '-'+temp.outerHeight()/2+'px');
+            else temp.css('top', '0px');
+            if (temp.outerWidth() < $(document).width() ) temp.css('margin-left', '-'+temp.outerWidth()/2+'px');
+            else temp.css('left', '0px');
 
-                temp.find('a.cbtn').click(function(e){
-                  if(bg){
-                    $('.layer').fadeOut();
-                  }else{
-                    temp.fadeOut();   //'닫기'버튼을 클릭하면 레이어가 사라진다.
-                  }
-                  e.preventDefault();
-                });
-
-                var str = '';
-                str += '<ul>';
-                str += '<li>' + data.title + '</li>';
-                str += '<li><image src="' + data.thumbnail + '"/></li>';
-                str += '<li>' + data.authors + '</li>';
-                str += '<li>' + data.translators + '</li>';
-                str += '<li>isbn:' + data.isbn + '</li>';
-                str += '<li>' + data.status + '</li>';
-                str += '<li>출판일:' + data.datetime + '</li>';
-                str += '<li>가격' + data.price + '</li>';
-                str += '<li>세일가격' + data.sale_price + '</li>';
-                str += '</ul>';
-
-                $('#detailView').html(str);
+            temp.find('a.cbtn').click(function(e){
+              if(bg){
+                $('.layer').fadeOut();
+              }else{
+                temp.fadeOut();   //'닫기'버튼을 클릭하면 레이어가 사라진다.
               }
-          })
+              e.preventDefault();
+            });
 
-      
+            var str = '';
+            str += '<ul>';
+            str += '<li>' + data.title + '</li>';
+            str += '<li><image src="' + data.thumbnail + '"/></li>';
+            str += '<li>' + data.authors + '</li>';
+            str += '<li>' + data.translators + '</li>';
+            str += '<li>isbn:' + data.isbn + '</li>';
+            str += '<li>' + data.status + '</li>';
+            str += '<li>출판일:' + data.datetime + '</li>';
+            str += '<li>가격' + data.price + '</li>';
+            str += '<li>세일가격' + data.sale_price + '</li>';
+            str += '</ul>';
+
+            $('#detailView').html(str);
+          });
+    }
+    function callApi(queryUrl, callback) {
+      console.log(queryUrl);
+        $.ajax({
+          url:queryUrl,
+          dataType:'json',
+          success:callback,
+          error:function(request, status, error) {
+            alert('url:' + queryUrl + '\n' + 
+                  'code:' + request.status + 
+                  ', message:' + request.responseText + 
+                  ', error:' + error);
+          }
+        })
     }
   </script>
   <script>
-    $('.layer .bg').click(function(e){
+    $('.layer .bg').click(function(e) {
         $('.layer').fadeOut();
         e.preventDefault();
       });
 
-    $(function(){
-      $('#search').click(function(){
+    $(function() {
+      $('#search').click(function() {
         searchBook();
       })
 
       //검색 히스토리 삭제
-      $('#deleteLastSearch').click(function(){
+      $('#deleteLastSearch').click(function() {
         var queryUrl = '/history/delete/all';
-          console.log(queryUrl);
-          $.ajax({
-              url:queryUrl,
-              dataType:'json',
-              success:function(datas) {
-                $('#history').html('');
-              }
-          })
+        callApi(queryUrl, function(datas) {
+              $('#history').html('');
+            });
       })
-
       //이전 검색 결과 조회
-      $('#lastSearch').click(function(){
+      $('#lastSearch').click(function() {
         var queryUrl = '/search/list';
-          console.log(queryUrl);
-          $.ajax({
-              url:queryUrl,
-              dataType:'json',
-              success:function(datas){
-                drawList(datas);
-
-                var pageIndex = ' <<  <  >  >> ';
-                // console.log(pageIndex);
-
-                $('#pageIndexTag').html(pageIndex);
-              }
-          })
+        callApi(queryUrl, function(datas) {
+              drawList(datas);
+              var pageIndex = ' <<  <  >  >> ';
+              $('#pageIndexTag').html(pageIndex);
+            });
       })
       //pagingLastSearch
       $('#pagingLastSearch').click(function(){
-        var queryUrl = '/search/listpage?page=' + $('#page').val() + '&size=' + $('#size option:selected').val() + '&sort=' + $('#historySort option:selected').val();
-          console.log(queryUrl);
-          $.ajax({
-              url:queryUrl,
-              dataType:'json',
-              success:function(res){
-                var datas = res.documents;
-                drawList(datas);
-                drawPageList(res.meta);
-              }
-          })
+        var queryUrl = '/search/listpage?page=' + $('#page').val() + 
+                       '&size=' + $('#size option:selected').val() + 
+                       '&sort=' + $('#historySort option:selected').val();
+        callApi(queryUrl, function(res) {
+              var datas = res.documents;
+              drawList(datas);
+              drawPageList(res.meta);
+            });
       })
-      $('#deleteLastSearchResult').click(function(){
+      $('#deleteLastSearchResult').click(function() {
         var queryUrl = '/search/delete/all';
-          console.log(queryUrl);
-          $.ajax({
-              url:queryUrl,
-              dataType:'json',
-              success:function(datas){
-                var str = '';
-                $('#result').html(str);
-                var pageIndex = '';
-                // console.log(pageIndex);
-
-                $('#pageIndexTag').html(pageIndex);
-              }
-          })
+        callApi(queryUrl, function(datas){
+              var str = '';
+              $('#result').html(str);
+              var pageIndex = '';
+              $('#pageIndexTag').html(pageIndex);
+            });
       })
       //bookMarkerSearch
-      $('#bookMarkerSearch').click(function(){
+      $('#bookMarkerSearch').click(function() {
         var queryUrl = '/bookmarker/list';
-          console.log(queryUrl);
-          $.ajax({
-              url:queryUrl,
-              dataType:'json',
-              success:function(datas){
-                drawList(datas);
-
-                var pageIndex = ' <<  <  >  >> ';
-
-                $('#pageIndexTag').html(pageIndex);
-              }
-          })
+        callApi(queryUrl, function(datas) {
+              drawList(datas);
+              var pageIndex = ' <<  <  >  >> ';
+              $('#pageIndexTag').html(pageIndex);
+            });
       })
       //bookMarkerAdd
-      $('#bookMarkerAdd').click(function(){
+      $('#bookMarkerAdd').click(function() {
         var isbns = '';
         $('#bookMarkerInfo:checked').each(function() { 
             isbns += ($(this).val()) + ',';
@@ -332,17 +292,12 @@ Released under the MIT license: http://jsbin.mit-license.org
         if (isbns == '')
           return;
         var queryUrl = '/bookmarker?bookMarkerInfo=' + isbns;
-          console.log(queryUrl);
-          $.ajax({
-              url:queryUrl,
-              dataType:'json',
-              success:function(datas){
-                alert("success add bookmarker")
-              }
-          })
+        callApi(queryUrl, function(datas) {
+          alert("success add bookmarker");
+        });
       })
       //bookMarkerDelete
-      $('#bookMarkerDelete').click(function(){
+      $('#bookMarkerDelete').click(function() {
         var isbns = '';
         $('#bookMarkerInfo:checked').each(function() { 
             isbns += ($(this).val()) + ',';
@@ -355,18 +310,16 @@ Released under the MIT license: http://jsbin.mit-license.org
           $.ajax({
               url:queryUrl,
               dataType:'json',
-              success:function(datas){
+              success:function(datas) {
                 drawList(datas);
-
                 var pageIndex = ' <<  <  >  >> ';
-
                 $('#pageIndexTag').html(pageIndex);
                 alert("success delete bookmarker")
               }
           })
       })
       //bookMarkerDeleteAll
-      $('#bookMarkerDeleteAll').click(function(){
+      $('#bookMarkerDeleteAll').click(function() {
         var queryUrl = '/bookmarker/delete/all';
           console.log(queryUrl);
           $.ajax({
@@ -381,40 +334,28 @@ Released under the MIT license: http://jsbin.mit-license.org
     })
 
     $( document ).ready(function() {
-        console.log( "ready!" );
-
-        $.ajax({
-          url:'/search/category',
-          dataType:'json',
-          success:function(datas){
+        // console.log( "ready!" );
+        // Get Category
+        callApi('/search/category', function(datas) {
               var str = '';
               for(var data in datas) {
                   str += '<option value=' + datas[data].category + '>' + datas[data].category + ' ' + datas[data].firstSection + ', ' + datas[data].secondSection + '</option>';
               }
               $('#category').html('<select name="category">'+str+'</select>');
-          }
-        })
-
-        $.ajax({
-          url:'/history/list',
-          dataType:'json',
-          success:function(datas){
+          });
+        //Get History
+        callApi('/history/list', function(datas) {
             console.log(datas);
             var str = '';
             for (var data in datas) {
               str += datas[data].query + ', ';
             }
             $('#history').html(str);
-          }
-        })
-
-        $.ajax({
-          url:'/search/list',
-          dataType:'json',
-          success:function(datas){
-            console.log(datas);
-          }
-        })
+          });
+        //Get Search List
+        callApi('/search/list', function(datas){
+              console.log(datas);
+            });
     });
     
   </script>
