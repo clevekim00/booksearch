@@ -166,7 +166,10 @@
           var datas = res.documents;
           drawList(datas);
           drawPageList(res.meta);
+          
+          getHistory();
         });
+
     }
     function layer_open(isbn) {
       var queryUrl = '/search/detail?isbn=' + isbn;
@@ -224,6 +227,17 @@
                   ', error:' + error);
           }
         })
+    }
+
+    function getHistory() {
+      callApi('/history/list', function(datas) {
+            console.log(datas);
+            var str = '';
+            for (var data in datas) {
+              str += datas[data].query + ', ';
+            }
+            $('#history').html(str);
+          });
     }
   </script>
   <script>
@@ -344,16 +358,9 @@
               $('#category').html('<select name="category">'+str+'</select>');
           });
         //Get History
-        callApi('/history/list', function(datas) {
-            console.log(datas);
-            var str = '';
-            for (var data in datas) {
-              str += datas[data].query + ', ';
-            }
-            $('#history').html(str);
-          });
+        getHistory();
         //Get Search List
-        callApi('/search/list', function(datas){
+        callApi('/search/list', function(datas) {
               console.log(datas);
             });
     });
